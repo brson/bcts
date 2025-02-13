@@ -31,13 +31,13 @@ impl<'db> TreeToken<'db> {
     fn is_whitespace_newline(&self, db: &'db dyn crate::Db) -> bool {
         return match self {
             TreeToken::Token(token) => {
-                is_whitespace_newline_(db, token.clone())
+                is_whitespace_newline(db, token.clone())
             }
             TreeToken::Branch(..) => false,
         };
 
         #[salsa::tracked]
-        pub fn is_whitespace_newline_<'db>(
+        pub fn is_whitespace_newline<'db>(
             db: &'db dyn crate::Db,
             token: Token<'db>
         ) -> bool {
