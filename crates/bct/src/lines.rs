@@ -47,3 +47,17 @@ impl<'db> TreeToken<'db> {
         }
     }
 }
+
+#[cfg(test)]
+fn dbglex(s: &str) -> String {
+    debug!("dbglex {s}");
+    let ref db = crate::Database::default();
+    let source = crate::input::Source::new(db, S(s));
+    let chunk = crate::source_map::basic_source_map(db, source);
+    let chunk_lex = crate::lexer::lex_chunk(db, chunk);
+    let bracer = crate::bracer::bracer(db, chunk_lex);
+    let lines: Vec<Vec<TreeToken>> = bracer.lines(db)
+        .map(|line| line.collect())
+        .collect();
+    todo!()
+}

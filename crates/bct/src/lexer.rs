@@ -322,7 +322,7 @@ impl Sigil {
 #[test]
 fn test_lex_chunk() {
     fn dbglex(s: &str) -> String {
-        let db = &crate::Database::default();
+        let ref db = crate::Database::default();
         let source = Source::new(db, S(s));
         let chunk = basic_source_map(db, source);
         let chunk_lex = lex_chunk(db, chunk);
