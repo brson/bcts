@@ -31,7 +31,7 @@ impl<'db> TreeToken<'db> {
     fn is_whitespace_newline(&self, db: &'db dyn crate::Db) -> bool {
         return match self {
             TreeToken::Token(token) => {
-                is_whitespace_newline(db, token.clone())
+                is_whitespace_newline(db, *token)
             }
             TreeToken::Branch(..) => false,
         };
