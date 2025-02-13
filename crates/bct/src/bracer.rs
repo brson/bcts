@@ -269,11 +269,11 @@ pub fn bracer<'db>(
                     } else if open_sigil == Sigil::ParenOpen {
                         brace_map.inserted_closes.push((index, Sigil::ParenClose));
                         brace_map.errors.push((
-                            open_index..index,//.checked_add(1).X(),
+                            open_index..index,
                             Sigil::ParenOpen,
                         ));
                         parent_brace_map.branches.push(Branch {
-                            real_token_range: open_index..index,//index.checked_add(1).X(),
+                            real_token_range: open_index..index,
                             branches: brace_map.branches.len(),
                             inserted_closes: brace_map.inserted_closes.len(),
                             removed_closes: brace_map.removed_closes.len(),
@@ -281,20 +281,15 @@ pub fn bracer<'db>(
                             open_sigil: Sigil::ParenOpen,
                             close_sigil: Sigil::ParenClose,
                         });
-                        // parent_brace_map.inserted_closes.push((index, Sigil::ParenClose));
-                        // parent_brace_map.errors.push((
-                        //     open_index..index.checked_add(1).X(),
-                        //     Sigil::ParenOpen,
-                        // ));
                         parent_brace_map.append(brace_map);
                     } else if open_sigil == Sigil::BraceOpen {
                         brace_map.inserted_closes.push((index, Sigil::BraceClose));
                         brace_map.errors.push((
-                            open_index..index,//.checked_add(1).X(),
+                            open_index..index,
                             Sigil::BraceOpen,
                         ));
                         parent_brace_map.branches.push(Branch {
-                            real_token_range: open_index..index,//checked_add(1).X(),
+                            real_token_range: open_index..index,
                             branches: brace_map.branches.len(),
                             inserted_closes: brace_map.inserted_closes.len(),
                             removed_closes: brace_map.removed_closes.len(),
@@ -302,11 +297,6 @@ pub fn bracer<'db>(
                             open_sigil: Sigil::BraceOpen,
                             close_sigil: Sigil::BraceClose,
                         });
-                        // parent_brace_map.inserted_closes.push((index, Sigil::BraceClose));
-                        // parent_brace_map.errors.push((
-                        //     open_index..index.checked_add(1).X(),
-                        //     Sigil::BraceOpen,
-                        // ));
                         parent_brace_map.append(brace_map);
                     } else {
                         todo!()
