@@ -7,22 +7,19 @@ use crate::lexer::{Token, TokenKind};
 impl<'db> Bracer<'db> {
     fn lines(&self, db: &'db dyn crate::Db) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
         self.iter(db).batching(|iter| {
-            match iter.next() {
-                None => None,
-                Some(token) => {
-                    Some(Some(token).into_iter().chain(iter.clone()).scan(false, |stop, next_token| {
-                        if *stop {
-                            None
-                        } else {
-                            if next_token.is_whitespace_newline(db) {
-                                *stop = true;
-                            }
-
-                            Some(next_token)
+            iter.next().map(|token| {
+                Some(token).into_iter().chain(iter.clone()).scan(false, |stop, next_token| {
+                    if *stop {
+                        None
+                    } else {
+                        if next_token.is_whitespace_newline(db) {
+                            *stop = true;
                         }
-                    }))
-                }
-            }
+
+                        Some(next_token)
+                    }
+                })
+            })
         })
     }
 }
