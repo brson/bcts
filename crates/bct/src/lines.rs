@@ -1,26 +1,36 @@
 use rmx::prelude::*;
 
 use rmx::core::iter;
+use rmx::core::ops::Range;
 
 use crate::bracer::{Bracer, TreeToken};
 use crate::lexer::{Token, TokenKind};
 
+#[salsa::tracked]
+pub struct Lines<'db> {
+    bracer: Bracer<'db>,
+    #[return_ref]
+    lines: Vec<Range<usize>>,
+}
+
 impl<'db> Bracer<'db> {
     fn lines(&self, db: &'db dyn crate::Db) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
-        self.iter(db).batching(|iter| {
-            iter.next().map(|token| {
-                Some(token).into_iter().chain(iter.clone()).scan(false, |stop, next_token| {
-                    if *stop {
-                        None
-                    } else {
-                        if next_token.is_whitespace_newline(db) {
-                            *stop = true;
-                        }
-
-                        Some(next_token)
-                    }
-                })
-            })
+        self.iter(db).peekable().batching(|iter| {
+            // fixme big allocs
+            let mut buf = vec![];
+            for token in iter {
+                if token.is_whitespace_newline(db) {
+                    buf.push(token);
+                    break;
+                } else {
+                    buf.push(token);
+                }
+            }
+            if buf.is_empty() {
+                None
+            } else {
+                Some(buf.into_iter())
+            }
         })
     }
 }
