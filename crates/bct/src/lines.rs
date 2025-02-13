@@ -81,7 +81,27 @@ fn test_lines() {
         vec![S("ws")],
     );
     assert_eq!(
+        dbglex("\n"),
+        vec![S("ws")],
+    );
+    assert_eq!(
+        dbglex("a\n"),
+        vec![S("a ws")],
+    );
+    assert_eq!(
         dbglex("a\nb"),
         vec![S("a ws"), S("b")],
+    );
+    assert_eq!(
+        dbglex("a\nb\n"),
+        vec![S("a ws"), S("b ws")],
+    );
+    assert_eq!(
+        dbglex("a(b\nc)d"),
+        vec![S("a ( b ws c ) d")],
+    );
+    assert_eq!(
+        dbglex("a(b\nc)d\na(b\nc)d"),
+        vec![S("a ( b ws c ) d ws"), S("a ( b ws c ) d")],
     );
 }
