@@ -373,18 +373,27 @@ pub fn bracer<'db>(
 }
 
 #[cfg(test)]
+#[extension_trait]
+impl<'db> VecTreeTokenExt<'db> for Vec<TreeToken<'db>> {
+    fn debug_str(&self, db: &'db dyn crate::Db) -> String {
+        let mut buf = Vec::<u8>::new();
+        Bracer::debug_write(self.iter().cloned(), &mut buf, db).X();
+        String::from_utf8(buf).X()
+    }
+}
+
+#[cfg(test)]
 impl<'db> Bracer<'db> {
     fn debug_str(&self, db: &'db dyn crate::Db) -> String {
         let mut buf = Vec::<u8>::new();
-        self.debug_write(&mut buf, db, self.iter(db)).X();
+        Self::debug_write(self.iter(db), &mut buf, db).X();
         String::from_utf8(buf).X()
     }
 
     fn debug_write(
-        &self,
+        iter: impl Iterator<Item = TreeToken<'db>>,
         w: &mut dyn Write,
         db: &'db dyn crate::Db,
-        iter: BracerIter<'db>,
     ) -> AnyResult<()> {
         let mut iter = iter.peekable();
         while let Some(token) = iter.next() {
@@ -395,7 +404,7 @@ impl<'db> Bracer<'db> {
                 TreeToken::Branch(sigil, mut next_iter) => {
                     write!(w, "{} ", sigil.as_str())?;
                     rmx::extras::recurse(|| {
-                        self.debug_write(w, db, next_iter.C())
+                        Self::debug_write(next_iter.C(), w, db)
                     })?;
                     if next_iter.next().is_some() {
                         write!(w, " ");
