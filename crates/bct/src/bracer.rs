@@ -350,7 +350,7 @@ pub fn bracer<'db>(
             inserted_closes: brace_map.inserted_closes.len(),
             removed_closes: brace_map.removed_closes.len(),
             errors: brace_map.errors.len(),
-            open_sigil: open_sigil,
+            open_sigil,
             close_sigil: open_sigil.close_sigil(),
         });
         parent_brace_map.errors.push((
