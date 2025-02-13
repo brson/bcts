@@ -10,6 +10,7 @@ pub mod source_map;
 pub mod chunks;
 pub mod lexer;
 pub mod bracer;
+pub mod lines;
 
 use salsa::Database as Db;
 

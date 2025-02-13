@@ -31,7 +31,7 @@ pub struct Branch {
 }
 
 impl<'db> Bracer<'db> {
-    fn iter(
+    pub fn iter(
         &self,
         db: &'db dyn crate::Db,
     ) -> BracerIter<'db> {
@@ -206,6 +206,7 @@ impl<'db> BracerIter<'db> {
     }
 }
 
+#[derive(Clone)]
 pub enum TreeToken<'db> {
     Token(Token<'db>),
     Branch(Sigil, BracerIter<'db>),
