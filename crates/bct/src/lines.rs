@@ -63,5 +63,16 @@ fn dbglex(s: &str) -> Vec<String> {
 
 #[test]
 fn test_lines() {
-    todo!()
+    assert_eq!(
+        dbglex(""),
+        Vec::<String>::new(),
+    );
+    assert_eq!(
+        dbglex(" "),
+        vec![S("ws")],
+    );
+    assert_eq!(
+        dbglex("a\nb"),
+        vec![S("a ws"), S("b")],
+    );
 }

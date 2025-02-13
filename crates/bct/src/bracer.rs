@@ -446,6 +446,10 @@ fn test_bracer() {
         "a ws b",
     );
     assert_eq!(
+        dbglex("a\nb"),
+        "a ws b",
+    );
+    assert_eq!(
         dbglex("()"),
         "( )",
     );
