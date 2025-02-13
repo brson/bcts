@@ -57,5 +57,10 @@ fn dbglex(s: &str) -> Vec<String> {
     let chunk = crate::source_map::basic_source_map(db, source);
     let chunk_lex = crate::lexer::lex_chunk(db, chunk);
     let bracer = crate::bracer::bracer(db, chunk_lex);
-    bracer.lines(db).map(|mut line| (&mut line as &mut dyn Iterator<Item = TreeToken>).debug_str(db)).collect()
+    bracer.lines(db).map(|mut line| line.debug_str(db)).collect()
+}
+
+#[test]
+fn test_lines() {
+    todo!()
 }
