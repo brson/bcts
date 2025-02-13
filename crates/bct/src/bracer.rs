@@ -53,7 +53,7 @@ impl<'db> Bracer<'db> {
 
 #[derive(Clone)]
 pub struct BracerIter<'db> {
-    db: &'db dyn crate::Db,
+    pub db: &'db dyn crate::Db,
     tree: Bracer<'db>,
     real_token_range: Range<usize>,
     branches: Range<usize>,

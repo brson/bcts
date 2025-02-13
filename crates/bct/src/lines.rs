@@ -3,33 +3,32 @@ use rmx::prelude::*;
 use rmx::core::iter;
 use rmx::core::ops::Range;
 
-use crate::bracer::{Bracer, TreeToken};
+use crate::bracer::{Bracer, TreeToken, BracerIter};
 use crate::lexer::{Token, TokenKind};
 
-#[salsa::tracked]
-pub struct Lines<'db> {
-    bracer: Bracer<'db>,
-    #[return_ref]
-    lines: Vec<Range<usize>>,
-}
-
-impl<'db> Bracer<'db> {
-    fn lines(&self, db: &'db dyn crate::Db) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
-        self.iter(db).peekable().batching(|iter| {
-            // fixme big allocs
-            let mut buf = vec![];
-            for token in iter {
+impl<'db> BracerIter<'db> {
+    fn lines(self) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
+        let db = self.db;
+        self.batching(move |iter| {
+            let mut iter_clone = iter.C().peekable();
+            while let Some(token) = iter.next() {
                 if token.is_whitespace_newline(db) {
-                    buf.push(token);
                     break;
-                } else {
-                    buf.push(token);
                 }
             }
-            if buf.is_empty() {
-                None
+            if iter_clone.peek().is_some() {
+                Some(iter_clone.scan(false, move |stop, token| {
+                    if *stop {
+                        None
+                    } else {
+                        if token.is_whitespace_newline(db) {
+                            *stop = true;
+                        }
+                        Some(token)
+                    }
+                }))
             } else {
-                Some(buf.into_iter())
+                None
             }
         })
     }
@@ -68,7 +67,7 @@ fn dbglex(s: &str) -> Vec<String> {
     let chunk = crate::source_map::basic_source_map(db, source);
     let chunk_lex = crate::lexer::lex_chunk(db, chunk);
     let bracer = crate::bracer::bracer(db, chunk_lex);
-    bracer.lines(db).map(|mut line| line.debug_str(db)).collect()
+    bracer.iter(db).lines().map(|mut line| line.debug_str(db)).collect()
 }
 
 #[test]
