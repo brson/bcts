@@ -383,6 +383,16 @@ impl<'db> VecTreeTokenExt<'db> for Vec<TreeToken<'db>> {
 }
 
 #[cfg(test)]
+#[extension_trait]
+pub impl<'db> IteratorOfTreeTokenExt<'db> for &mut dyn Iterator<Item = TreeToken<'db>> {
+    fn debug_str(self, db: &'db dyn crate::Db) -> String {
+        let mut buf = Vec::<u8>::new();
+        Bracer::debug_write(self, &mut buf, db).X();
+        String::from_utf8(buf).X()
+    }
+}
+
+#[cfg(test)]
 impl<'db> Bracer<'db> {
     fn debug_str(&self, db: &'db dyn crate::Db) -> String {
         let mut buf = Vec::<u8>::new();
