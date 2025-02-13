@@ -1,0 +1,16 @@
+[package]
+name = "bct"
+version.workspace = true
+license.workspace = true
+authors.workspace = true
+edition.workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+rmx.workspace = true
+salsa.workspace = true
+serde.workspace = true
+memchr.workspace = true
+enum-iterator.workspace = true

@@ -1,0 +1,33 @@
+[workspace.package]
+description = "todo"
+version = "0.1.0"
+license = "Apache-2.0 OR MIT"
+authors = ["Brian Anderson <andersrb@gmail.com>"]
+documentation = "todo"
+edition = "2021"
+
+[workspace]
+resolver = "2"
+
+members = [
+  "crates/*",
+]
+
+default-members = [
+  "crates/bct-cli",
+]
+
+[workspace.dependencies]
+rmx.path = "../rustmax/crates/rustmax"
+rmx.package = "rustmax"
+rmx.version = "0.0.3"
+rmx.features = [
+  "rmx-profile-max",
+]
+salsa.path = "../salsa/"
+serde = "1"
+memchr.version = "2.7.4"
+enum-iterator = "2.1.0"
+
+[profile.release]
+overflow-checks = true
