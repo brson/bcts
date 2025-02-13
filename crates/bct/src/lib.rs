@@ -26,10 +26,3 @@ impl salsa::Database for Database {
         info!("event: {event:?}");
     }
 }
-
-fn recurse<F, R>(f: F) -> R
-where F: FnOnce() -> R
-{
-    // todo could grow stack here
-    f()
-}

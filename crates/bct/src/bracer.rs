@@ -393,7 +393,7 @@ impl<'db> Bracer<'db> {
                 }
                 TreeToken::Branch(sigil, mut next_iter) => {
                     write!(w, "{} ", sigil.as_str())?;
-                    crate::recurse(|| {
+                    rmx::extras::recurse(|| {
                         self.debug_write(w, db, next_iter.C())
                     })?;
                     if next_iter.next().is_some() {
