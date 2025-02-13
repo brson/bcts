@@ -1,8 +1,9 @@
 use rmx::prelude::*;
+
 use rmx::itertools::Itertools;
-use std::ops::Range;
-use std::{iter, mem};
-use std::collections::BTreeMap;
+use rmx::std::ops::Range;
+use rmx::std::{iter, mem};
+use rmx::std::collections::BTreeMap;
 
 use crate::input::Source;
 use crate::text::{Text, SubText};
