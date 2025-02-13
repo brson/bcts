@@ -315,11 +315,7 @@ impl Sigil {
     }
 
     fn is_close_sigil(&self) -> bool {
-        match self {
-            Sigil::ParenClose => true,
-            Sigil::BraceClose => true,
-            _ => false
-        }
+        matches!(self, Sigil::ParenClose | Sigil::BraceClose)
     }
 }
 
