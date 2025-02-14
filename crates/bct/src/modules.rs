@@ -16,13 +16,13 @@ pub struct ModuleMap {
 #[salsa::input]
 pub struct ModuleConfig {
     #[return_ref]
-    import_configs: Vec<ImportConfig>,
+    pub import_configs: Vec<ImportConfig>,
 }
 
 #[salsa::input]
 pub struct ImportConfig {
     #[return_ref]
-    imports: BTreeMap<ImportPrefix, Module>,
+    pub imports: BTreeMap<ImportPrefix, Module>,
 }
 
 #[derive(Clone, Debug, salsa::Update)]
