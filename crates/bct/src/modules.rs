@@ -31,8 +31,8 @@ pub struct ImportConfig {
 #[derive(Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
 pub struct ImportLocation {
-    pub location: ImportPart,
-    pub module_name: ImportPart,
+    pub bank: ImportPart, // e.g. "deps", "local"
+    pub module: ImportPart,
 }
 
 #[salsa::input]
