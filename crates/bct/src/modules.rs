@@ -6,23 +6,6 @@ use rmx::std::sync::Arc;
 
 use crate::input::Source;
 
-mod scratch {
-    use super::*;
-
-    #[salsa::tracked]
-    pub fn translate_module<'db>(
-        db: &'db dyn crate::Db,
-        modmap: ModuleMap,
-        module: Module,
-    ) -> Translated<'db> {
-        todo!()
-    }
-
-    #[salsa::tracked]
-    pub struct Translated<'db> {
-    }
-}
-
 #[salsa::input]
 pub struct ModuleMap {
     #[return_ref]
