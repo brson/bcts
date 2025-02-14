@@ -39,12 +39,6 @@ pub struct Module {
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
 pub struct SourceHashId([u8; 32]);
 
-#[salsa::input]
-pub struct ModuleMap {
-    #[return_ref]
-    pub import_to_hash: BTreeMap<String, SourceHashId>,
-}
-
 #[salsa::tracked]
 pub struct SourceHash<'db> {
     hash: SourceHashId,
