@@ -6,19 +6,32 @@ use rmx::std::sync::Arc;
 
 use crate::input::Source;
 
+mod scratch {
+    use super::*;
+
+    #[salsa::tracked]
+    pub fn translate_module<'db>(
+        db: &'db dyn crate::Db,
+        modmap: ModuleMap,
+        module: Module,
+    ) -> Translated<'db> {
+        todo!()
+    }
+
+    #[salsa::tracked]
+    pub struct Translated<'db> {
+    }
+}
+
 #[salsa::input]
 pub struct ModuleMap {
     #[return_ref]
-    sources: BTreeMap<SourceHash, Source>,
-    #[return_ref]
     modules: BTreeSet<Module>,
-    #[return_ref]
-    import_part_cache: BTreeMap<ImportPartStr, ImportPart>,
 }
 
 #[salsa::input]
 pub struct Module {
-    pub source: SourceHash,
+    pub source: Source,
     pub config: ModuleConfig,
 }
 
@@ -48,26 +61,3 @@ pub struct ImportPart {
 
 pub type ImportPartStr = Arc<str>;
 
-#[derive(Copy, Clone, Debug, salsa::Update)]
-#[derive(Eq, PartialEq, Ord, PartialOrd)]
-pub struct SourceHash([u8; 32]);
-
-impl Source {
-    fn hash<'db>(&self, db: &'db dyn crate::Db) -> SourceHash {
-        return source_hash(db, self.C()).hash(db);
-
-        #[salsa::tracked]
-        pub struct SourceHashTracked<'db> {
-            hash: SourceHash,
-        }
-
-        #[salsa::tracked]
-        pub fn source_hash<'db>(
-            db: &'db dyn crate::Db,
-            source: Source,
-        ) -> SourceHashTracked<'db> {
-            let hash = blake3::hash(source.text(db).as_bytes()).into();
-            SourceHashTracked::new(db, SourceHash(hash))
-        }
-    }
-}
