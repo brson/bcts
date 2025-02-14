@@ -57,11 +57,17 @@ pub struct SourceHash<'db> {
     hash: SourceHashId,
 }
 
-#[salsa::tracked]
-pub fn source_hash<'db>(
-    db: &'db dyn crate::Db,
-    source: Source,
-) -> SourceHash<'db> {
-    let hash = blake3::hash(source.text(db).as_bytes()).into();
-    SourceHash::new(db, SourceHashId(hash))
+impl Source {
+    fn hash<'db>(&self, db: &'db dyn crate::Db) -> SourceHash<'db> {
+        return source_hash(db, self.C());
+
+        #[salsa::tracked]
+        pub fn source_hash<'db>(
+            db: &'db dyn crate::Db,
+            source: Source,
+        ) -> SourceHash<'db> {
+            let hash = blake3::hash(source.text(db).as_bytes()).into();
+            SourceHash::new(db, SourceHashId(hash))
+        }
+    }
 }
