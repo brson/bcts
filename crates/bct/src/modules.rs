@@ -1,9 +1,39 @@
 use rmx::prelude::*;
 
 use rmx::blake3;
-use rmx::alloc::collections::BTreeMap;
+use rmx::alloc::collections::{BTreeMap, BTreeSet};
 
 use crate::input::Source;
+
+#[salsa::input]
+pub struct ModuleMap2 {
+    #[return_ref]
+    pub sources: BTreeMap<SourceHashId, Source>,
+    #[return_ref]
+    pub modules: BTreeSet<Module>,
+}
+
+#[salsa::input]
+pub struct ModuleConfig {
+    #[return_ref]
+    import_configs: Vec<ImportConfig>,
+}
+
+#[salsa::input]
+pub struct ImportConfig {
+    #[return_ref]
+    imports: BTreeMap<ImportPrefix, Module>,
+}
+
+#[derive(Clone, Debug, salsa::Update)]
+#[derive(Eq, PartialEq, Ord, PartialOrd)]
+pub struct ImportPrefix(pub Vec<String>);
+
+#[salsa::input]
+pub struct Module {
+    source: SourceHashId,
+    config: ModuleConfig,
+}
 
 #[derive(Copy, Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
