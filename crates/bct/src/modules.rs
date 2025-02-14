@@ -9,11 +9,23 @@ use crate::input::Source;
 #[salsa::input]
 pub struct ModuleMap {
     #[return_ref]
-    pub sources: BTreeMap<SourceHashId, Source>,
+    sources: BTreeMap<SourceHashId, Source>,
     #[return_ref]
-    pub modules: BTreeSet<Module>,
+    modules: BTreeSet<Module>,
     #[return_ref]
-    pub import_part_cache: BTreeMap<ImportPartStr, ImportPart>,
+    import_part_cache: BTreeMap<ImportPartStr, ImportPart>,
+}
+
+impl ModuleMap {
+    pub fn empty(db: &dyn crate::Db) -> ModuleMap {
+        ModuleMap::new(db, default(), default(), default())
+    }
+}
+
+#[salsa::input]
+pub struct Module {
+    pub source: SourceHashId,
+    pub config: ModuleConfig,
 }
 
 #[salsa::input]
@@ -37,16 +49,10 @@ pub struct ImportLocation {
 #[salsa::input]
 pub struct ImportPart {
     #[return_ref]
-    s: ImportPartStr,
+    pub s: ImportPartStr,
 }
 
 pub type ImportPartStr = Arc<str>;
-
-#[salsa::input]
-pub struct Module {
-    source: SourceHashId,
-    config: ModuleConfig,
-}
 
 #[derive(Copy, Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
@@ -54,7 +60,7 @@ pub struct SourceHashId([u8; 32]);
 
 #[salsa::tracked]
 pub struct SourceHash<'db> {
-    hash: SourceHashId,
+    pub hash: SourceHashId,
 }
 
 impl Source {
