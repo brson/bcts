@@ -9,7 +9,7 @@ use crate::input::Source;
 #[salsa::input]
 pub struct ModuleMap {
     #[return_ref]
-    sources: BTreeMap<SourceHashId, Source>,
+    sources: BTreeMap<SourceHash, Source>,
     #[return_ref]
     modules: BTreeSet<Module>,
     #[return_ref]
@@ -24,7 +24,7 @@ impl ModuleMap {
 
 #[salsa::input]
 pub struct Module {
-    pub source: SourceHashId,
+    pub source: SourceHash,
     pub config: ModuleConfig,
 }
 
@@ -56,24 +56,24 @@ pub type ImportPartStr = Arc<str>;
 
 #[derive(Copy, Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
-pub struct SourceHashId([u8; 32]);
-
-#[salsa::tracked]
-pub struct SourceHash<'db> {
-    pub hash: SourceHashId,
-}
+pub struct SourceHash([u8; 32]);
 
 impl Source {
-    fn hash<'db>(&self, db: &'db dyn crate::Db) -> SourceHash<'db> {
-        return source_hash(db, self.C());
+    fn hash<'db>(&self, db: &'db dyn crate::Db) -> SourceHash {
+        return source_hash(db, self.C()).hash(db);
+
+        #[salsa::tracked]
+        pub struct SourceHashTracked<'db> {
+            hash: SourceHash,
+        }
 
         #[salsa::tracked]
         pub fn source_hash<'db>(
             db: &'db dyn crate::Db,
             source: Source,
-        ) -> SourceHash<'db> {
+        ) -> SourceHashTracked<'db> {
             let hash = blake3::hash(source.text(db).as_bytes()).into();
-            SourceHash::new(db, SourceHashId(hash))
+            SourceHashTracked::new(db, SourceHash(hash))
         }
     }
 }
