@@ -20,6 +20,27 @@ impl ModuleMap {
     pub fn empty(db: &dyn crate::Db) -> ModuleMap {
         ModuleMap::new(db, default(), default(), default())
     }
+
+    pub fn insert_module(
+        &mut self,
+        db: &dyn crate::Db,
+        module: Module,
+    ) {
+        todo!()
+    }
+
+    pub fn swap_modules(
+        &mut self,
+        db: &dyn crate::Db,
+        modules: &[ModuleSwap],
+    ) {
+        todo!()
+    }
+}
+
+pub struct ModuleSwap {
+    old: Module,
+    new: Module,
 }
 
 #[salsa::input]
