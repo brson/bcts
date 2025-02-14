@@ -16,51 +16,6 @@ pub struct ModuleMap {
     import_part_cache: BTreeMap<ImportPartStr, ImportPart>,
 }
 
-impl ModuleMap {
-    pub fn empty(db: &dyn crate::Db) -> ModuleMap {
-        ModuleMap::new(db, default(), default(), default())
-    }
-
-    pub fn insert_source(
-        &mut self,
-        db: &dyn crate::Db,
-        source: Source,
-    ) -> SourceHash {
-        todo!()
-    }
-
-    pub fn remove_source(
-        &mut self,
-        db: &dyn crate::Db,
-        hash: SourceHash,
-    ) {
-        todo!()
-    }
-
-    pub fn insert_module(
-        &mut self,
-        db: &dyn crate::Db,
-        module: Module,
-    ) {
-        todo!()
-    }
-
-    pub fn swap_modules(
-        &mut self,
-        db: &dyn crate::Db,
-        modules: &[ModuleSwap],
-    ) {
-        todo!()
-    }
-
-    pub fn gc_import_part_cache(
-        &mut self,
-        db: &dyn crate::Db,
-    ) {
-        todo!()
-    }
-}
-
 pub struct ModuleSwap {
     old: Module,
     new: Module,
