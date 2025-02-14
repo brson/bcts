@@ -19,7 +19,7 @@ pub struct ModuleMap {
 #[salsa::input]
 pub struct ModuleConfig {
     #[return_ref]
-    pub import_configs: Vec<ImportConfig>,
+    pub import_config: ImportConfig,
 }
 
 #[salsa::input]
