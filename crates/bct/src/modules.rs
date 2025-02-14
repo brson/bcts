@@ -16,11 +16,6 @@ pub struct ModuleMap {
     import_part_cache: BTreeMap<ImportPartStr, ImportPart>,
 }
 
-pub struct ModuleSwap {
-    old: Module,
-    new: Module,
-}
-
 #[salsa::input]
 pub struct Module {
     pub source: SourceHash,
