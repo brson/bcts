@@ -28,11 +28,10 @@ pub struct ImportConfig {
     pub imports: BTreeMap<ImportLocation, Module>,
 }
 
-#[derive(Clone, Debug, salsa::Update)]
-#[derive(Eq, PartialEq, Ord, PartialOrd)]
+#[salsa::input]
 pub struct ImportLocation {
-    pub bank: ImportPart, // e.g. "deps", "local"
-    pub module: ImportPart,
+    #[return_ref]
+    pub path: Vec<ImportPart>,
 }
 
 #[salsa::input]
