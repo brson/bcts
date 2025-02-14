@@ -21,6 +21,22 @@ impl ModuleMap {
         ModuleMap::new(db, default(), default(), default())
     }
 
+    pub fn insert_source(
+        &mut self,
+        db: &dyn crate::Db,
+        source: Source,
+    ) -> SourceHash {
+        todo!()
+    }
+
+    pub fn remove_source(
+        &mut self,
+        db: &dyn crate::Db,
+        hash: SourceHash,
+    ) {
+        todo!()
+    }
+
     pub fn insert_module(
         &mut self,
         db: &dyn crate::Db,
