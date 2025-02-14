@@ -13,7 +13,7 @@ pub mod bracer;
 pub mod lines;
 
 pub mod modules;
-//pub mod import_resolve;
+pub mod import_resolve;
 //pub mod package;
 
 use salsa::Database as Db;
