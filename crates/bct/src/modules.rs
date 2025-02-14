@@ -13,7 +13,7 @@ pub struct ModuleMap {
     #[return_ref]
     pub modules: BTreeSet<Module>,
     #[return_ref]
-    pub import_part_cache: BTreeSet<ImportPart>,
+    pub import_part_cache: BTreeMap<String, ImportPart>,
 }
 
 #[salsa::input]
@@ -28,7 +28,11 @@ pub struct ImportConfig {
     pub imports: BTreeMap<ImportPrefix, Module>,
 }
 
-pub type ImportPart = Arc<str>;
+#[salsa::input]
+pub struct ImportPart {
+    #[return_ref]
+    s: String,
+}
 
 #[derive(Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
