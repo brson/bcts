@@ -2,6 +2,7 @@ use rmx::prelude::*;
 
 use rmx::blake3;
 use rmx::alloc::collections::{BTreeMap, BTreeSet};
+use rmx::std::sync::Arc;
 
 use crate::input::Source;
 
@@ -11,6 +12,8 @@ pub struct ModuleMap {
     pub sources: BTreeMap<SourceHashId, Source>,
     #[return_ref]
     pub modules: BTreeSet<Module>,
+    #[return_ref]
+    pub import_part_cache: BTreeSet<ImportPart>,
 }
 
 #[salsa::input]
@@ -25,11 +28,11 @@ pub struct ImportConfig {
     pub imports: BTreeMap<ImportPrefix, Module>,
 }
 
-use crate::text::InternedText;
+pub type ImportPart = Arc<str>;
 
 #[derive(Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
-pub struct ImportPrefix(pub Vec<String>);
+pub struct ImportPrefix(pub Vec<ImportPart>);
 
 #[salsa::input]
 pub struct Module {
