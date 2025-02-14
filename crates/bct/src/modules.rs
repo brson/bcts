@@ -6,7 +6,7 @@ use rmx::alloc::collections::{BTreeMap, BTreeSet};
 use crate::input::Source;
 
 #[salsa::input]
-pub struct ModuleMap2 {
+pub struct ModuleMap {
     #[return_ref]
     pub sources: BTreeMap<SourceHashId, Source>,
     #[return_ref]
