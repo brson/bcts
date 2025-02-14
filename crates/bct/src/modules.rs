@@ -25,6 +25,8 @@ pub struct ImportConfig {
     pub imports: BTreeMap<ImportPrefix, Module>,
 }
 
+use crate::text::InternedText;
+
 #[derive(Clone, Debug, salsa::Update)]
 #[derive(Eq, PartialEq, Ord, PartialOrd)]
 pub struct ImportPrefix(pub Vec<String>);
