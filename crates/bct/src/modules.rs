@@ -27,7 +27,7 @@ pub struct ModuleConfig {
 #[salsa::input]
 pub struct ImportConfig {
     #[return_ref]
-    pub imports: BTreeMap<ImportLocation, Module>,
+    pub modules: BTreeMap<ImportLocation, Module>,
 }
 
 #[salsa::input]
