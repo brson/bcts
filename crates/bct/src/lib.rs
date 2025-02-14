@@ -12,6 +12,8 @@ pub mod lexer;
 pub mod bracer;
 pub mod lines;
 
+pub mod modules;
+
 use salsa::Database as Db;
 
 #[salsa::db]
