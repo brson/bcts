@@ -36,6 +36,13 @@ impl ModuleMap {
     ) {
         todo!()
     }
+
+    pub fn gc_import_part_cache(
+        &mut self,
+        db: &dyn crate::Db,
+    ) {
+        todo!()
+    }
 }
 
 pub struct ModuleSwap {
