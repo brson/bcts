@@ -2464,7 +2464,7 @@ version = "0.18.0"
 dependencies = [
  "append-only-vec",
  "arc-swap",
- "crossbeam",
+ "crossbeam-queue",
  "dashmap",
  "hashbrown 0.14.5",
  "hashlink",

@@ -25,7 +25,7 @@ pub struct Token<'db> {
     pub kind: TokenKind,
 }
 
-#[derive(Copy, Clone, Debug, salsa::Update)]
+#[derive(Copy, Clone, Debug, Hash, salsa::Update)]
 #[derive(Eq, PartialEq)]
 pub enum TokenKind {
     Word,
@@ -36,7 +36,7 @@ pub enum TokenKind {
     Error,
 }
 
-#[derive(Copy, Clone, Debug, salsa::Update)]
+#[derive(Copy, Clone, Debug, Hash, salsa::Update)]
 #[derive(Eq, PartialEq)]
 #[derive(enum_iterator::Sequence)]
 pub enum Sigil {

@@ -20,7 +20,7 @@ pub struct Bracer<'db> {
     pub errors: Vec<(Range<usize>, Sigil)>,
 }
 
-#[derive(Clone, Debug, salsa::Update)]
+#[derive(Clone, Debug, Hash, salsa::Update)]
 pub struct Branch {
     real_token_range: Range<usize>,
     branches: usize,
