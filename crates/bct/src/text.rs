@@ -21,7 +21,7 @@ pub struct InternedText<'db> {
     pub text: String,
 }
 
-#[salsa::tracked]
+#[salsa::interned]
 pub struct InternedSubText<'db> {
     pub text: InternedText<'db>,
     pub range: Range<usize>,
@@ -131,4 +131,25 @@ impl<'db> InternedSubText<'db> {
     pub fn as_str(&self, db: &'db dyn crate::Db) -> &'db str {
         &self.text(db).text(db)[self.range(db)]
     }
+}
+
+#[test]
+fn interned_text_eq() {
+    let ref db = crate::Database::default();
+    let s1 = InternedText::new(db, S("abc"));
+    let s2 = InternedText::new(db, S("abc"));
+    assert_eq!(s1, s2);
+
+    #[salsa::tracked]
+    fn test_sub<'db>(
+        db: &'db dyn crate::Db,
+        s1: InternedText<'db>,
+        s2: InternedText<'db>,
+    ) {
+        let s1 = s1.sub(db, 1..2);
+        let s2 = s2.sub(db, 1..2);
+        assert_eq!(s1, s2);
+    }
+
+    test_sub(db, s1, s2);
 }
