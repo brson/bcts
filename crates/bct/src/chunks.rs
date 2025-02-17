@@ -29,8 +29,8 @@ pub fn basic_chunks<'db>(
 #[salsa::tracked]
 pub struct Config<'db> {
     #[return_ref]
-    chunk_start_chars: Vec<char>,
-    try_chunk: for <'a> fn(&'a str) -> Option<usize>,
+    pub chunk_start_chars: Vec<char>,
+    pub try_chunk: for <'a> fn(&'a str) -> Option<usize>,
 }
 
 #[salsa::tracked]

@@ -7,7 +7,7 @@ use crate::bracer::{Bracer, TreeToken, BracerIter};
 use crate::lexer::{Token, TokenKind};
 
 impl<'db> BracerIter<'db> {
-    fn lines(self) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
+    pub fn lines(self) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
         let db = self.db;
         self.batching(move |iter| {
             let mut iter_clone = iter.C().peekable();
