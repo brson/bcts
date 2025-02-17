@@ -268,6 +268,14 @@ impl<'db> ChunkLex<'db> {
 }
 
 impl<'db> Token<'db> {
+    pub fn without_space(self, db: &'db dyn crate::Db) -> Option<Self> {
+        match self.kind(db) {
+            TokenKind::Whitespace => None,
+            TokenKind::Comment => None,
+            _ => Some(self),
+        }
+    }
+
     #[cfg(test)]
     pub fn debug_str(&self, db: &'db dyn crate::Db) -> &'db str {
         match self.kind(db) {
