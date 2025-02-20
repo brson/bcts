@@ -363,6 +363,18 @@ pub fn bracer<'db>(
     )
 }
 
+impl<'db> TreeToken<'db> {
+    pub fn without_space(self, db: &'db dyn crate::Db) -> Option<Self> {
+        match self {
+            TreeToken::Token(token) => {
+                token.without_space(db)
+                    .map(TreeToken::Token)
+            }
+            token @ TreeToken::Branch(..) => Some(token),
+        }
+    }
+}
+
 #[cfg(test)]
 #[extension_trait]
 impl<'db> VecTreeTokenExt<'db> for Vec<TreeToken<'db>> {
