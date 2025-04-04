@@ -10,12 +10,13 @@ use crate::input::Source;
 pub struct ModuleMap {
     #[return_ref]
     modules: BTreeSet<Module>,
+    #[return_ref]
+    pub configs: BTreeMap<Module, ModuleConfig>,
 }
 
 #[salsa::input]
 pub struct Module {
     pub source: Source,
-    pub config: ModuleConfig,
 }
 
 #[salsa::input]
