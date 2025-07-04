@@ -20,6 +20,7 @@ pub struct ChunkLex<'db> {
 }
 
 #[salsa::tracked]
+#[derive(Debug)]
 pub struct Token<'db> {
     pub text: SubText<'db>,
     pub kind: TokenKind,
