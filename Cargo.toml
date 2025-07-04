@@ -14,7 +14,7 @@ members = [
 ]
 
 default-members = [
-  "crates/bct-cli",
+  "crates/bct",
 ]
 
 [workspace.dependencies]
