@@ -9,12 +9,13 @@ use crate::chunk::Chunk;
 
 #[salsa::tracked]
 pub struct Config<'db> {
-    #[return_ref]
+    #[returns(ref)]
     comment_start_chars: Vec<char>,
-    #[return_ref]
+    #[returns(ref)]
     string_start_chars: Vec<char>,
-    parse_comment: for <'a> fn(&'a str) -> Option<Result<usize, usize>>,
-    parse_string: for <'a> fn(&'a str) -> Option<Result<usize, usize>>,
+    // fixme had to remove configurability in salsa upgrade
+    //parse_comment: fn(&str) -> Option<Result<usize, usize>>,
+    //parse_string: fn(&str) -> Option<Result<usize, usize>>,
 }
 
 #[salsa::tracked]
@@ -59,8 +60,8 @@ pub fn basic_config<'db>(
         db,
         vec!['%', '/'],
         vec!['"'],
-        basic_parse_comment,
-        basic_parse_string,
+        //basic_parse_comment,
+        //basic_parse_string,
     )
 }
 
@@ -162,7 +163,8 @@ impl<'db> State<'db> {
     fn parse_comment(&self, text: &str) -> Option<Result<usize, usize>> {
         let start_char = text.chars().next().X();
         if self.config.comment_start_chars(self.db).contains(&start_char) {
-            self.config.parse_comment(self.db)(text)
+            //self.config.parse_comment(self.db)(text)
+            basic_parse_comment(text)
         } else {
             None
         }
@@ -171,7 +173,8 @@ impl<'db> State<'db> {
     fn parse_string(&self, text: &str) -> Option<Result<usize, usize>> {
         let start_char = text.chars().next().X();
         if self.config.string_start_chars(self.db).contains(&start_char) {
-            self.config.parse_string(self.db)(text)
+            //self.config.parse_string(self.db)(text)
+            basic_parse_string(text)
         } else {
             None
         }

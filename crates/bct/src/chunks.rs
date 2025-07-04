@@ -10,7 +10,7 @@ use crate::chunk::{Chunk, RangeKind};
 
 #[salsa::tracked]
 pub struct Chunks<'db> {
-    #[return_ref]
+    #[returns(ref)]
     pub chunks: Vec<Chunk<'db>>,
 }
 
@@ -28,7 +28,7 @@ pub fn basic_chunks<'db>(
 
 #[salsa::tracked]
 pub struct Config<'db> {
-    #[return_ref]
+    #[returns(ref)]
     pub chunk_start_chars: Vec<char>,
     pub try_chunk: for <'a> fn(&'a str) -> Option<usize>,
 }

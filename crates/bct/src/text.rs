@@ -5,7 +5,7 @@ use std::{iter, mem};
 
 #[salsa::tracked]
 pub struct Text<'db> {
-    #[return_ref]
+    #[returns(ref)]
     pub text: String,
 }
 
@@ -16,12 +16,14 @@ pub struct SubText<'db> {
 }
 
 #[salsa::interned]
+#[derive(Debug)]
 pub struct InternedText<'db> {
-    #[return_ref]
+    #[returns(ref)]
     pub text: String,
 }
 
 #[salsa::interned]
+#[derive(Debug)]
 pub struct InternedSubText<'db> {
     pub text: InternedText<'db>,
     pub range: Range<usize>,

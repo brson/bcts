@@ -8,38 +8,41 @@ use crate::input::Source;
 
 #[salsa::input]
 pub struct ModuleMap {
-    #[return_ref]
+    #[returns(ref)]
     modules: BTreeSet<Module>,
-    #[return_ref]
+    #[returns(ref)]
     pub configs: BTreeMap<Module, ModuleConfig>,
 }
 
 #[salsa::input]
+#[derive(Ord, PartialOrd)]
 pub struct Module {
+    #[returns(ref)]
     pub source: Source,
 }
 
 #[salsa::input]
 pub struct ModuleConfig {
-    #[return_ref]
+    #[returns(ref)]
     pub import_config: ImportConfig,
 }
 
 #[salsa::input]
 pub struct ImportConfig {
-    #[return_ref]
+    #[returns(ref)]
     pub modules: BTreeMap<ImportLocation, Module>,
 }
 
 #[salsa::input]
+#[derive(Ord, PartialOrd)]
 pub struct ImportLocation {
-    #[return_ref]
+    #[returns(ref)]
     pub path: Vec<ImportPart>,
 }
 
 #[salsa::input]
 pub struct ImportPart {
-    #[return_ref]
+    #[returns(ref)]
     pub s: ImportPartStr,
 }
 

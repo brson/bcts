@@ -10,13 +10,13 @@ use crate::lexer::{ChunkLex, Token, TokenKind, Sigil};
 #[salsa::tracked]
 pub struct Bracer<'db> {
     pub chunk: ChunkLex<'db>,
-    #[return_ref]
+    #[returns(ref)]
     pub branches: Vec<Branch>,
-    #[return_ref]
+    #[returns(ref)]
     pub inserted_closes: Vec<(usize, Sigil)>,
-    #[return_ref]
+    #[returns(ref)]
     pub removed_closes: Vec<(usize, Sigil)>,
-    #[return_ref]
+    #[returns(ref)]
     pub errors: Vec<(Range<usize>, Sigil)>,
 }
 
