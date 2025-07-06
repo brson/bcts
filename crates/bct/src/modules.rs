@@ -43,8 +43,5 @@ pub struct ImportLocation {
 #[salsa::input]
 pub struct ImportPart {
     #[returns(ref)]
-    pub s: ImportPartStr,
+    pub s: Arc<str>,
 }
-
-pub type ImportPartStr = Arc<str>;
-
