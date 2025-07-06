@@ -17,18 +17,18 @@ pub struct ModuleMap {
 #[salsa::input]
 #[derive(Ord, PartialOrd)]
 pub struct Module {
-    #[returns(ref)]
     pub source: Source,
 }
 
 #[salsa::input]
 pub struct ModuleConfig {
     #[returns(ref)]
-    pub import_config: ImportConfig,
+    pub import_config: ImportWorldConfig,
 }
 
+/// Defines the "world" of modules available for another module to import.
 #[salsa::input]
-pub struct ImportConfig {
+pub struct ImportWorldConfig {
     #[returns(ref)]
     pub modules: BTreeMap<ImportLocation, Module>,
 }
