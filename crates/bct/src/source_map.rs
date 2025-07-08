@@ -14,6 +14,7 @@ pub struct Config<'db> {
     #[returns(ref)]
     string_start_chars: Vec<char>,
     // fixme had to remove configurability in salsa upgrade
+    // fixme why does chunks::Config work? - because one field derives correctly, but two doesn't
     //parse_comment: fn(&str) -> Option<Result<usize, usize>>,
     //parse_string: fn(&str) -> Option<Result<usize, usize>>,
 }
