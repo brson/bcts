@@ -38,22 +38,22 @@ impl<'db> TreeToken<'db> {
     fn is_whitespace_newline(&self, db: &'db dyn crate::Db) -> bool {
         return match self {
             TreeToken::Token(token) => {
-                is_whitespace_newline(db, *token)
+                match token.kind(db) {
+                    TokenKind::Whitespace => {
+                        token_contains_newline(db, *token)
+                    }
+                    _ => false,
+                }
             }
             TreeToken::Branch(..) => false,
         };
 
         #[salsa::tracked]
-        pub fn is_whitespace_newline<'db>(
+        fn token_contains_newline<'db>(
             db: &'db dyn crate::Db,
             token: Token<'db>
         ) -> bool {
-            match token.kind(db) {
-                TokenKind::Whitespace => {
-                    token.text(db).as_str(db).contains("\n")
-                }
-                _ => false,
-            }
+            token.text(db).as_str(db).contains("\n")
         }
     }
 }
