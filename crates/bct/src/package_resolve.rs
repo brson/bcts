@@ -37,9 +37,7 @@ pub enum ResolvedPackageModule {
 
 #[salsa::tracked]
 pub struct PackageWorldModuleGraphWithErrors<'db> {
-    pub map: PackageWorldModuleGraph<'db>,
-    #[returns(ref)]
-    pub errors: Vec<ValidationError>,
+    pub result: Result<PackageWorldModuleGraph<'db>, ValidationError>,
 }
 
 #[derive(Copy, Clone, Debug, Hash, salsa::Update)]
@@ -86,11 +84,10 @@ pub fn resolve_package_world<'db>(
         module_edges.insert(package_module, module_deps);
     }
     let graph = PackageWorldModuleGraph::new(db, module_edges);
-    let errors = validate_graph(db, graph);
+    let result = validate_graph(db, graph).map(|()| graph);
     PackageWorldModuleGraphWithErrors::new(
         db,
-        graph,
-        errors,
+        result,
     )
 }
 
@@ -110,7 +107,7 @@ fn lookup_import<'db>(
 fn validate_graph<'db>(
     db: &'db dyn crate::Db,
     graph: PackageWorldModuleGraph<'db>,
-) -> Vec<ValidationError> {
+) -> Result<(), ValidationError> {
     let edges: BTreeMap<PackageModule, BTreeSet<PackageModule>> = graph.edges(db);
     detect_cycles(&edges)
 }
@@ -122,9 +119,8 @@ enum VisitState {
     Visited,
 }
 
-fn detect_cycles(edges: &BTreeMap<PackageModule, BTreeSet<PackageModule>>) -> Vec<ValidationError> {
+fn detect_cycles(edges: &BTreeMap<PackageModule, BTreeSet<PackageModule>>) -> Result<(), ValidationError> {
     let mut visit_state: BTreeMap<PackageModule, VisitState> = BTreeMap::new();
-    let mut errors = Vec::new();
 
     // Initialize all nodes as unvisited
     for &node in edges.keys() {
@@ -144,13 +140,12 @@ fn detect_cycles(edges: &BTreeMap<PackageModule, BTreeSet<PackageModule>>) -> Ve
     for node in nodes {
         if visit_state[&node] == VisitState::Unvisited {
             if dfs_detect_cycle(node, edges, &mut visit_state) {
-                errors.push(ValidationError::CycleDetected);
-                break; // Stop after finding first cycle
+                return Err(ValidationError::CycleDetected);
             }
         }
     }
 
-    errors
+    return Ok(());
 }
 
 fn dfs_detect_cycle(
@@ -428,7 +423,7 @@ fn test_unresolved_import() {
     ];
 
     let mut unresolved_actual = vec![];
-    for (package_module, imports) in resolved.map(db).map(db) {
+    for (package_module, imports) in resolved.result(db).expect(".").map(db) {
         for ((import_space, module_alias), resolved_package) in imports {
             if matches!(resolved_package, ResolvedPackageModule::Unresolved) {
                 unresolved_actual.push(
@@ -445,8 +440,6 @@ fn test_unresolved_import() {
     for (expected, actual) in unresolved_expected.into_iter().zip(unresolved_actual.into_iter()) {
         assert_eq!(expected, actual);
     }
-
-    assert!(resolved.errors(db).is_empty());
 }
 
 #[cfg(test)]
@@ -512,5 +505,5 @@ fn test_cycles() {
         test_input.import_demand_map(db),
     );
 
-    assert!(!resolved.errors(db).is_empty());
+    assert!(resolved.result(db).is_err());
 }
