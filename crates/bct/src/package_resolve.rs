@@ -373,4 +373,72 @@ fn test_unresolved_import() {
     for (expected, actual) in unresolved_expected.into_iter().zip(unresolved_actual.into_iter()) {
         assert_eq!(expected, actual);
     }
+
+    assert!(resolved.errors(db).is_empty());
+}
+
+#[cfg(test)]
+#[rustfmt::skip]
+#[salsa::tracked]
+fn test_input_cycle<'db>(
+    db: &'db dyn crate::Db,
+) -> TestInput<'db> {
+    let package_world_map = PackageWorldMap::new(
+        db,
+        BTreeMap::from([
+            (S("sys"), BTreeMap::from([
+                (S("core"), Package::new(
+                    db,
+                    S("core"),
+                    S("a"),
+                    BTreeMap::from([
+                        (S("a"), PackageModule::new(
+                            db,
+                            S("a"),
+                            Source::new(
+                                db,
+                                S("import module pkg/b"),
+                            ),
+                        )),
+                        (S("b"), PackageModule::new(
+                            db,
+                            S("b"),
+                            Source::new(
+                                db,
+                                S("import module pkg/a"),
+                            ),
+                        )),
+                    ]),
+                )),
+            ])),
+        ]),
+    );
+    let package_core = package_world_map.map(db)["sys"]["core"];
+    let module_a = package_core.modules(db)["a"];
+    let module_b = package_core.modules(db)["b"];
+    let import_demand_map = ImportDemandMap::new(
+        db,
+        BTreeMap::from([
+            (module_a, vec![
+                (S("pkg"), S("b"))
+            ]),
+            (module_b, vec![
+                (S("pkg"), S("a"))
+            ]),
+        ]),
+    );
+    TestInput::new(db, package_world_map, import_demand_map)
+}
+
+#[test]
+fn test_cycles() {
+    let ref db = crate::Database::default();
+    let test_input = test_input_cycle(db);
+    let resolved = resolve_package_world(
+        db,
+        test_input.package_world_map(db),
+        test_input.import_demand_map(db),
+    );
+
+    assert!(!resolved.errors(db).is_empty());
 }
