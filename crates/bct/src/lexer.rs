@@ -44,6 +44,7 @@ pub enum Sigil {
     Dot,
     Comma,
     Semicolon,
+    SlashForward,
     ColonDash,
     ParenOpen,
     ParenClose,
@@ -304,6 +305,7 @@ impl Sigil {
             Sigil::Dot => ".",
             Sigil::Comma => ",",
             Sigil::Semicolon => ";",
+            Sigil::SlashForward => "/",
             Sigil::ColonDash => ":-",
             Sigil::ParenOpen => "(",
             Sigil::ParenClose => ")",
@@ -374,6 +376,14 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("(){}){"),
         "( ) { } ) {",
+    );
+    assert_eq!(
+        dbglex("a / b / c"),
+        "a ws / ws b ws / ws c",
+    );
+    assert_eq!(
+        dbglex("a/b/c"),
+        "a / b / c",
     );
 }
 
