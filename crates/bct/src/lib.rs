@@ -14,7 +14,9 @@ pub mod lines;
 
 pub mod modules;
 pub mod module_resolve;
-//pub mod package;
+
+pub mod package;
+pub mod package_resolve;
 
 use salsa::Database as Db;
 
