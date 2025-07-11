@@ -60,7 +60,10 @@ pub fn resolve_package_world<'db>(
         module_edges.insert(package_module, module_deps);
     }
     let graph = PackageWorldModuleGraph::new(db, module_edges);
-    validate_graph(db, graph);
+    let errors = validate_graph(db, graph);
+    if !errors.is_empty() {
+        todo!("module graph failed validation");
+    }
     graph
 }
 
@@ -80,7 +83,8 @@ fn lookup_import<'db>(
 fn validate_graph<'db>(
     db: &'db dyn crate::Db,
     graph: PackageWorldModuleGraph<'db>,
-) {
+) -> Vec<AnyResult<()>> {
+    let edges: BTreeMap<PackageModule, BTreeSet<PackageModule>> = graph.edges(db);
     todo!()
 }
 
@@ -108,11 +112,11 @@ struct ModuleWorldMap<'db> {
     map: BTreeMap<ImportSpace, BTreeMap<ModuleAlias, PackageModule>>,
 }
 
-struct PackageWorldRecord<'db> {
-    import_space: &'db str,
-    package_name: &'db str,
-    package: Package,
-    package_module: PackageModule,
+pub struct PackageWorldRecord<'db> {
+    pub import_space: &'db str,
+    pub package_name: &'db str,
+    pub package: Package,
+    pub package_module: PackageModule,
 }
 
 impl<'db> PackageWorldMap<'db> {
@@ -134,7 +138,7 @@ impl<'db> PackageWorldMap<'db> {
             }).collect()
     }
 
-    fn flatten_iter(
+    pub fn flatten_iter(
         &self,
         db: &'db dyn crate::Db,
     ) -> impl Iterator<Item = PackageWorldRecord<'db>> {
@@ -153,6 +157,19 @@ impl<'db> PackageWorldMap<'db> {
                     })
                 })
             })
+    }
+}
+
+impl<'db> PackageWorldModuleGraph<'db> {
+    fn edges(
+        &self,
+        db: &'db dyn crate::Db,
+    ) -> BTreeMap<PackageModule, BTreeSet<PackageModule>> {
+        self.map(db).iter().map(|(module, modules)| {
+            let modules: BTreeSet<_> = modules.iter()
+                .map(|(_, module)| module).copied().collect();
+            (*module, modules)
+        }).collect()
     }
 }
 
