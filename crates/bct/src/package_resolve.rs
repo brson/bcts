@@ -83,7 +83,7 @@ fn lookup_import<'db>(
 fn validate_graph<'db>(
     db: &'db dyn crate::Db,
     graph: PackageWorldModuleGraph<'db>,
-) -> Vec<AnyResult<()>> {
+) -> Vec<AnyError> {
     let edges: BTreeMap<PackageModule, BTreeSet<PackageModule>> = graph.edges(db);
     todo!()
 }
