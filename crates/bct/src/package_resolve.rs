@@ -25,7 +25,27 @@ pub struct ImportDemandMap<'db> {
 #[salsa::tracked]
 pub struct PackageWorldModuleGraph<'db> {
     #[returns(ref)]
-    pub map: BTreeMap<PackageModule, BTreeSet<(ImportDemand, PackageModule)>>,
+    pub map: BTreeMap<PackageModule, BTreeSet<(ImportDemand, ResolvedPackageModule)>>,
+}
+
+#[derive(Copy, Clone, Hash, salsa::Update)]
+#[derive(Eq, PartialEq, Ord, PartialOrd)]
+pub enum ResolvedPackageModule {
+    Resolved(PackageModule),
+    Unresolved,
+}
+
+#[salsa::tracked]
+pub struct PackageWorldModuleGraphWithErrors<'db> {
+    pub map: PackageWorldModuleGraph<'db>,
+    #[returns(ref)]
+    pub errors: Vec<ValidationError>,
+}
+
+#[derive(Copy, Clone, Debug, Hash, salsa::Update)]
+#[derive(Eq, PartialEq, Ord, PartialOrd)]
+pub enum ValidationError {
+    CycleDetected,
 }
 
 #[salsa::tracked]
@@ -33,8 +53,8 @@ pub fn resolve_package_world<'db>(
     db: &'db dyn crate::Db,
     package_world_map: PackageWorldMap<'db>,
     import_demand_map: ImportDemandMap<'db>,
-) -> PackageWorldModuleGraph<'db> {
-    let mut module_edges: BTreeMap<PackageModule, BTreeSet<(ImportDemand, PackageModule)>> = default();
+) -> PackageWorldModuleGraphWithErrors<'db> {
+    let mut module_edges: BTreeMap<PackageModule, BTreeSet<(ImportDemand, ResolvedPackageModule)>> = default();
     for package_world_record in package_world_map.flatten_iter(db) {
         let PackageWorldRecord {
             import_space,
@@ -52,19 +72,26 @@ pub fn resolve_package_world<'db>(
                 import_demand,
             ) {
                 Some(import_package_module) => {
-                    module_deps.insert((import_demand.C(), import_package_module));
+                    module_deps.insert((
+                        import_demand.C(), ResolvedPackageModule::Resolved(import_package_module),
+                    ));
                 },
-                None => todo!("unresolved module"),
+                None => {
+                    module_deps.insert((
+                        import_demand.C(), ResolvedPackageModule::Unresolved,
+                    ));
+                }
             }
         }
         module_edges.insert(package_module, module_deps);
     }
     let graph = PackageWorldModuleGraph::new(db, module_edges);
     let errors = validate_graph(db, graph);
-    if !errors.is_empty() {
-        todo!("module graph failed validation");
-    }
-    graph
+    PackageWorldModuleGraphWithErrors::new(
+        db,
+        graph,
+        errors,
+    )
 }
 
 fn lookup_import<'db>(
@@ -83,7 +110,7 @@ fn lookup_import<'db>(
 fn validate_graph<'db>(
     db: &'db dyn crate::Db,
     graph: PackageWorldModuleGraph<'db>,
-) -> Vec<AnyError> {
+) -> Vec<ValidationError> {
     let edges: BTreeMap<PackageModule, BTreeSet<PackageModule>> = graph.edges(db);
     todo!()
 }
@@ -167,7 +194,10 @@ impl<'db> PackageWorldModuleGraph<'db> {
     ) -> BTreeMap<PackageModule, BTreeSet<PackageModule>> {
         self.map(db).iter().map(|(module, modules)| {
             let modules: BTreeSet<_> = modules.iter()
-                .map(|(_, module)| module).copied().collect();
+                .filter_map(|(_, module)| match module {
+                    ResolvedPackageModule::Resolved(module) => Some(module),
+                    ResolvedPackageModule::Unresolved => None,
+                }).copied().collect();
             (*module, modules)
         }).collect()
     }
