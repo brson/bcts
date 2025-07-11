@@ -112,7 +112,79 @@ fn validate_graph<'db>(
     graph: PackageWorldModuleGraph<'db>,
 ) -> Vec<ValidationError> {
     let edges: BTreeMap<PackageModule, BTreeSet<PackageModule>> = graph.edges(db);
-    default()
+    detect_cycles(&edges)
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum VisitState {
+    Unvisited,
+    Visiting,
+    Visited,
+}
+
+fn detect_cycles(edges: &BTreeMap<PackageModule, BTreeSet<PackageModule>>) -> Vec<ValidationError> {
+    let mut visit_state: BTreeMap<PackageModule, VisitState> = BTreeMap::new();
+    let mut errors = Vec::new();
+
+    // Initialize all nodes as unvisited
+    for &node in edges.keys() {
+        visit_state.insert(node, VisitState::Unvisited);
+    }
+
+    // All deps are accounted for
+    for deps in edges.values() {
+        for &dep in deps {
+            assert!(visit_state.get(&dep).is_some());
+            //visit_state.entry(dep).or_insert(VisitState::Unvisited);
+        }
+    }
+
+    // Perform DFS from each unvisited node
+    let nodes: Vec<PackageModule> = visit_state.keys().copied().collect();
+    for node in nodes {
+        if visit_state[&node] == VisitState::Unvisited {
+            if dfs_detect_cycle(node, edges, &mut visit_state) {
+                errors.push(ValidationError::CycleDetected);
+                break; // Stop after finding first cycle
+            }
+        }
+    }
+
+    errors
+}
+
+fn dfs_detect_cycle(
+    node: PackageModule,
+    edges: &BTreeMap<PackageModule, BTreeSet<PackageModule>>,
+    visit_state: &mut BTreeMap<PackageModule, VisitState>,
+) -> bool {
+    if visit_state[&node] == VisitState::Visiting {
+        // Found a back edge - cycle detected
+        return true;
+    }
+
+    if visit_state[&node] == VisitState::Visited {
+        return false;
+    }
+
+    // Mark as visiting
+    visit_state.insert(node, VisitState::Visiting);
+
+    // Visit all dependencies
+    if let Some(deps) = edges.get(&node) {
+        for &dep in deps {
+            if rmx::extras::recurse(|| {
+                dfs_detect_cycle(dep, edges, visit_state)
+            }) {
+                return true;
+            }
+        }
+    }
+
+    // Mark as visited
+    visit_state.insert(node, VisitState::Visited);
+
+    false
 }
 
 #[salsa::tracked]
