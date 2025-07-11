@@ -112,7 +112,7 @@ fn validate_graph<'db>(
     graph: PackageWorldModuleGraph<'db>,
 ) -> Vec<ValidationError> {
     let edges: BTreeMap<PackageModule, BTreeSet<PackageModule>> = graph.edges(db);
-    todo!()
+    default()
 }
 
 #[salsa::tracked]
@@ -293,5 +293,84 @@ fn package_world_map_iter_lazy() {
         assert_eq!(expected.1, actual.package_name);
         assert_eq!(expected.1, actual.package.name(db));
         assert_eq!(expected.2, actual.package_module.name(db));
+    }
+}
+
+#[salsa::tracked]
+struct TestInput<'db> {
+    package_world_map: PackageWorldMap<'db>,
+    import_demand_map: ImportDemandMap<'db>,
+}
+
+#[cfg(test)]
+#[rustfmt::skip]
+#[salsa::tracked]
+fn test_input_unresolvable<'db>(
+    db: &'db dyn crate::Db,
+) -> TestInput<'db> {
+    let package_world_map = PackageWorldMap::new(
+        db,
+        BTreeMap::from([
+            (S("main"), BTreeMap::from([
+                (S("main"), Package::new(
+                    db,
+                    S("main"),
+                    S("main"),
+                    BTreeMap::from([
+                        (S("main"), PackageModule::new(
+                            db,
+                            S("main"),
+                            Source::new(
+                                db,
+                                S("import module sys/core"),
+                            ),
+                        )),
+                    ]),
+                )),
+            ])),
+        ]),
+    );
+    let module_map = package_world_map.module_map(db);
+    let import_demand_map = ImportDemandMap::new(
+        db,
+        BTreeMap::from([
+            (module_map["main"]["main"], vec![
+                (S("sys"), S("core"))
+            ]),
+        ]),
+    );
+    TestInput::new(db, package_world_map, import_demand_map)
+}
+
+#[test]
+fn test_unresolved_import() {
+    let ref db = crate::Database::default();
+    let test_input = test_input_unresolvable(db);
+    let resolved = resolve_package_world(
+        db,
+        test_input.package_world_map(db),
+        test_input.import_demand_map(db),
+    );
+    let unresolved_expected = vec![
+        ("main", ("sys", "core")),
+    ];
+
+    let mut unresolved_actual = vec![];
+    for (package_module, imports) in resolved.map(db).map(db) {
+        for ((import_space, module_alias), resolved_package) in imports {
+            if matches!(resolved_package, ResolvedPackageModule::Unresolved) {
+                unresolved_actual.push(
+                    (
+                        package_module.name(db).as_str(),
+                        (import_space.as_str(), module_alias.as_str())
+                    )
+                );
+            }
+        }
+    }
+
+    assert_eq!(unresolved_expected.len(), unresolved_actual.len());
+    for (expected, actual) in unresolved_expected.into_iter().zip(unresolved_actual.into_iter()) {
+        assert_eq!(expected, actual);
     }
 }
