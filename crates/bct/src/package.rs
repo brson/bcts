@@ -3,7 +3,6 @@ use rmx::std::collections::BTreeMap;
 
 use crate::input::Source;
 
-pub type ImportSpace = String;
 pub type PackageName = String;
 pub type ModuleName = String;
 
