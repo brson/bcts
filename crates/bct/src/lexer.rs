@@ -297,6 +297,13 @@ impl<'db> Token<'db> {
             _ => false,
         }
     }
+
+    pub fn word_str(&self, db: &'db dyn crate::Db) -> Option<&'db str> {
+        if self.kind(db) != TokenKind::Word {
+            return None;
+        }
+        Some(self.text(db).as_str(db))
+    }
 }
 
 impl Sigil {
