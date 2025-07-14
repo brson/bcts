@@ -20,7 +20,7 @@ pub struct Package {
 #[derive(Ord, PartialOrd)]
 pub struct PackageModule {
     #[returns(ref)]
-    pub name: String,
+    pub name: ModuleName,
     pub text: Source,
 }
 
