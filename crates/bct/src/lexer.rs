@@ -50,6 +50,14 @@ pub enum Sigil {
     ParenClose,
     BraceOpen,
     BraceClose,
+    BracketOpen,
+    BracketClose,
+    AngleOpen,
+    AngleClose,
+    At,
+    Equals,
+    Pipe,
+    Colon,
 }
 
 #[salsa::tracked]
@@ -318,6 +326,14 @@ impl Sigil {
             Sigil::ParenClose => ")",
             Sigil::BraceOpen => "{",
             Sigil::BraceClose => "}",
+            Sigil::BracketOpen => "[",
+            Sigil::BracketClose => "]",
+            Sigil::AngleOpen => "<",
+            Sigil::AngleClose => ">",
+            Sigil::At => "@",
+            Sigil::Equals => "=",
+            Sigil::Pipe => "|",
+            Sigil::Colon => ":",
         }
     }
 
@@ -329,12 +345,14 @@ impl Sigil {
         match self {
             Sigil::ParenOpen => Sigil::ParenClose,
             Sigil::BraceOpen => Sigil::BraceClose,
+            Sigil::BracketOpen => Sigil::BracketClose,
+            Sigil::AngleOpen => Sigil::AngleClose,
             _ => bug!(),
         }
     }
 
     fn is_close_sigil(&self) -> bool {
-        matches!(self, Sigil::ParenClose | Sigil::BraceClose)
+        matches!(self, Sigil::ParenClose | Sigil::BraceClose | Sigil::BracketClose | Sigil::AngleClose)
     }
 }
 
@@ -391,6 +409,10 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("a/b/c"),
         "a / b / c",
+    );
+    assert_eq!(
+        dbglex("a<b>c[d]e|f:g=h"),
+        "a < b > c [ d ] e | f : g = h",
     );
 }
 
