@@ -298,6 +298,38 @@ pub fn bracer<'db>(
                             close_sigil: Sigil::BraceClose,
                         });
                         parent_brace_map.append(brace_map);
+                    } else if open_sigil == Sigil::BracketOpen {
+                        brace_map.inserted_closes.push((index, Sigil::BracketClose));
+                        brace_map.errors.push((
+                            open_index..index,
+                            Sigil::BracketOpen,
+                        ));
+                        parent_brace_map.branches.push(Branch {
+                            real_token_range: open_index..index,
+                            branches: brace_map.branches.len(),
+                            inserted_closes: brace_map.inserted_closes.len(),
+                            removed_closes: brace_map.removed_closes.len(),
+                            errors: brace_map.errors.len(),
+                            open_sigil: Sigil::BracketOpen,
+                            close_sigil: Sigil::BracketClose,
+                        });
+                        parent_brace_map.append(brace_map);
+                    } else if open_sigil == Sigil::AngleOpen {
+                        brace_map.inserted_closes.push((index, Sigil::AngleClose));
+                        brace_map.errors.push((
+                            open_index..index,
+                            Sigil::AngleOpen,
+                        ));
+                        parent_brace_map.branches.push(Branch {
+                            real_token_range: open_index..index,
+                            branches: brace_map.branches.len(),
+                            inserted_closes: brace_map.inserted_closes.len(),
+                            removed_closes: brace_map.removed_closes.len(),
+                            errors: brace_map.errors.len(),
+                            open_sigil: Sigil::AngleOpen,
+                            close_sigil: Sigil::AngleClose,
+                        });
+                        parent_brace_map.append(brace_map);
                     } else {
                         todo!()
                     }
@@ -319,11 +351,23 @@ pub fn bracer<'db>(
             TokenKind::Sigil(Sigil::BraceOpen) => {
                 stack.push((index, Sigil::BraceOpen, default()));
             }
+            TokenKind::Sigil(Sigil::BracketOpen) => {
+                stack.push((index, Sigil::BracketOpen, default()));
+            }
+            TokenKind::Sigil(Sigil::AngleOpen) => {
+                stack.push((index, Sigil::AngleOpen, default()));
+            }
             TokenKind::Sigil(Sigil::ParenClose) => {
                 close_brace(&mut stack, index, Sigil::ParenOpen, Sigil::ParenClose);
             }
             TokenKind::Sigil(Sigil::BraceClose) => {
                 close_brace(&mut stack, index, Sigil::BraceOpen, Sigil::BraceClose);
+            }
+            TokenKind::Sigil(Sigil::BracketClose) => {
+                close_brace(&mut stack, index, Sigil::BracketOpen, Sigil::BracketClose);
+            }
+            TokenKind::Sigil(Sigil::AngleClose) => {
+                close_brace(&mut stack, index, Sigil::AngleOpen, Sigil::AngleClose);
             }
             _ => {},
         }
@@ -512,5 +556,25 @@ fn test_bracer() {
     assert_eq!(
         dbglex("(a}b}c)"),
         "( a b c )",
+    );
+    assert_eq!(
+        dbglex("[]"),
+        "[ ]",
+    );
+    assert_eq!(
+        dbglex("<>"),
+        "< >",
+    );
+    assert_eq!(
+        dbglex("a[b]c"),
+        "a [ b ] c",
+    );
+    assert_eq!(
+        dbglex("a<b>c"),
+        "a < b > c",
+    );
+    assert_eq!(
+        dbglex("([{<>}])"),
+        "( [ { < > } ] )",
     );
 }
