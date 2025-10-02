@@ -6,31 +6,37 @@ use rmx::core::ops::Range;
 use crate::bracer::{Bracer, TreeToken, BracerIter};
 use crate::lexer::{Token, TokenKind};
 
+pub fn iter_lines<'db>(
+    db: &'db dyn crate::Db,
+    iter: impl Iterator<Item = TreeToken<'db>> + Clone,
+) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
+    iter.batching(move |iter| {
+        let mut iter_clone = iter.C().peekable();
+        while let Some(token) = iter.next() {
+            if token.is_whitespace_newline(db) {
+                break;
+            }
+        }
+        if iter_clone.peek().is_some() {
+            Some(iter_clone.scan(false, move |stop, token| {
+                if *stop {
+                    None
+                } else {
+                    if token.is_whitespace_newline(db) {
+                        *stop = true;
+                    }
+                    Some(token)
+                }
+            }))
+        } else {
+            None
+        }
+    })
+}
+
 impl<'db> BracerIter<'db> {
     pub fn lines(self) -> impl Iterator<Item = impl Iterator<Item = TreeToken<'db>>> {
-        let db = self.db;
-        self.batching(move |iter| {
-            let mut iter_clone = iter.C().peekable();
-            while let Some(token) = iter.next() {
-                if token.is_whitespace_newline(db) {
-                    break;
-                }
-            }
-            if iter_clone.peek().is_some() {
-                Some(iter_clone.scan(false, move |stop, token| {
-                    if *stop {
-                        None
-                    } else {
-                        if token.is_whitespace_newline(db) {
-                            *stop = true;
-                        }
-                        Some(token)
-                    }
-                }))
-            } else {
-                None
-            }
-        })
+        iter_lines(self.db, self)
     }
 }
 
