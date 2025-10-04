@@ -60,6 +60,7 @@ pub enum Sigil {
     Colon,
     Question,
     Exclamation,
+    Hash,
 }
 
 #[salsa::tracked]
@@ -338,6 +339,7 @@ impl Sigil {
             Sigil::Colon => ":",
             Sigil::Question => "?",
             Sigil::Exclamation => "!",
+            Sigil::Hash => "#",
         }
     }
 
@@ -425,6 +427,10 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("?!"),
         "? !",
+    );
+    assert_eq!(
+        dbglex("a#b"),
+        "a # b",
     );
 }
 
