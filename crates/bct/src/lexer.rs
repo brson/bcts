@@ -58,6 +58,8 @@ pub enum Sigil {
     Equals,
     Pipe,
     Colon,
+    Question,
+    Exclamation,
 }
 
 #[salsa::tracked]
@@ -334,6 +336,8 @@ impl Sigil {
             Sigil::Equals => "=",
             Sigil::Pipe => "|",
             Sigil::Colon => ":",
+            Sigil::Question => "?",
+            Sigil::Exclamation => "!",
         }
     }
 
@@ -413,6 +417,14 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("a<b>c[d]e|f:g=h"),
         "a < b > c [ d ] e | f : g = h",
+    );
+    assert_eq!(
+        dbglex("a?b!c"),
+        "a ? b ! c",
+    );
+    assert_eq!(
+        dbglex("?!"),
+        "? !",
     );
 }
 
