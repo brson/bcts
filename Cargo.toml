@@ -22,7 +22,7 @@ rmx.path = "../rustmax/crates/rustmax"
 rmx.package = "rustmax"
 rmx.version = "0.0.5"
 rmx.features = [
-  "rmx-profile-max",
+  "rmx-profile-wasm",
 ]
 salsa.path = "../salsa/"
 serde = "1"
