@@ -41,26 +41,60 @@ pub enum TokenKind {
 #[derive(Eq, PartialEq)]
 #[derive(enum_iterator::Sequence)]
 pub enum Sigil {
+    // Three-character sigils (must come before two-character variants).
+    PlusQuestionEquals,
+    MinusQuestionEquals,
+    StarQuestionEquals,
+    SlashQuestionEquals,
+    PlusBarEquals,
+    MinusBarEquals,
+    StarBarEquals,
+    SlashBarEquals,
+
+    // Two-character sigils (must come before single-character variants).
+    ColonDash,
+    PlusQuestion,
+    MinusQuestion,
+    StarQuestion,
+    SlashQuestion,
+    PlusBar,
+    MinusBar,
+    StarBar,
+    SlashBar,
+    PlusEquals,
+    MinusEquals,
+    StarEquals,
+    SlashEquals,
+    DotLess,
+    DotGreater,
+    LessEquals,
+    GreaterEquals,
+    EqualsEquals,
+    ExclamationEquals,
+
+    // Single-character sigils.
     Dot,
     Comma,
     Semicolon,
+    Plus,
+    Minus,
+    Star,
     SlashForward,
-    ColonDash,
+    Equals,
+    AngleOpen,
+    AngleClose,
+    Pipe,
+    Question,
+    Exclamation,
+    Colon,
+    Hash,
+    At,
     ParenOpen,
     ParenClose,
     BraceOpen,
     BraceClose,
     BracketOpen,
     BracketClose,
-    AngleOpen,
-    AngleClose,
-    At,
-    Equals,
-    Pipe,
-    Colon,
-    Question,
-    Exclamation,
-    Hash,
 }
 
 #[salsa::tracked]
@@ -320,26 +354,60 @@ impl<'db> Token<'db> {
 impl Sigil {
     pub fn as_str(&self) -> &'static str {
         match self {
+            // Three-character sigils.
+            Sigil::PlusQuestionEquals => "+?=",
+            Sigil::MinusQuestionEquals => "-?=",
+            Sigil::StarQuestionEquals => "*?=",
+            Sigil::SlashQuestionEquals => "/?=",
+            Sigil::PlusBarEquals => "+|=",
+            Sigil::MinusBarEquals => "-|=",
+            Sigil::StarBarEquals => "*|=",
+            Sigil::SlashBarEquals => "/|=",
+
+            // Two-character sigils.
+            Sigil::ColonDash => ":-",
+            Sigil::PlusQuestion => "+?",
+            Sigil::MinusQuestion => "-?",
+            Sigil::StarQuestion => "*?",
+            Sigil::SlashQuestion => "/?",
+            Sigil::PlusBar => "+|",
+            Sigil::MinusBar => "-|",
+            Sigil::StarBar => "*|",
+            Sigil::SlashBar => "/|",
+            Sigil::PlusEquals => "+=",
+            Sigil::MinusEquals => "-=",
+            Sigil::StarEquals => "*=",
+            Sigil::SlashEquals => "/=",
+            Sigil::DotLess => ".<",
+            Sigil::DotGreater => ".>",
+            Sigil::LessEquals => "<=",
+            Sigil::GreaterEquals => ">=",
+            Sigil::EqualsEquals => "==",
+            Sigil::ExclamationEquals => "!=",
+
+            // Single-character sigils.
             Sigil::Dot => ".",
             Sigil::Comma => ",",
             Sigil::Semicolon => ";",
+            Sigil::Plus => "+",
+            Sigil::Minus => "-",
+            Sigil::Star => "*",
             Sigil::SlashForward => "/",
-            Sigil::ColonDash => ":-",
+            Sigil::Equals => "=",
+            Sigil::AngleOpen => "<",
+            Sigil::AngleClose => ">",
+            Sigil::Pipe => "|",
+            Sigil::Question => "?",
+            Sigil::Exclamation => "!",
+            Sigil::Colon => ":",
+            Sigil::Hash => "#",
+            Sigil::At => "@",
             Sigil::ParenOpen => "(",
             Sigil::ParenClose => ")",
             Sigil::BraceOpen => "{",
             Sigil::BraceClose => "}",
             Sigil::BracketOpen => "[",
             Sigil::BracketClose => "]",
-            Sigil::AngleOpen => "<",
-            Sigil::AngleClose => ">",
-            Sigil::At => "@",
-            Sigil::Equals => "=",
-            Sigil::Pipe => "|",
-            Sigil::Colon => ":",
-            Sigil::Question => "?",
-            Sigil::Exclamation => "!",
-            Sigil::Hash => "#",
         }
     }
 
@@ -431,6 +499,86 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("a#b"),
         "a # b",
+    );
+
+    // Basic arithmetic operators.
+    assert_eq!(
+        dbglex("a+b-c*d/e"),
+        "a + b - c * d / e",
+    );
+    assert_eq!(
+        dbglex("a + b - c * d / e"),
+        "a ws + ws b ws - ws c ws * ws d ws / ws e",
+    );
+
+    // Question variants.
+    assert_eq!(
+        dbglex("a+?b-?c*?d/?e"),
+        "a +? b -? c *? d /? e",
+    );
+    assert_eq!(
+        dbglex("+? -? *? /?"),
+        "+? ws -? ws *? ws /?",
+    );
+
+    // Bar variants.
+    assert_eq!(
+        dbglex("a+|b-|c*|d/|e"),
+        "a +| b -| c *| d /| e",
+    );
+    assert_eq!(
+        dbglex("+| -| *| /|"),
+        "+| ws -| ws *| ws /|",
+    );
+
+    // Assignment operators.
+    assert_eq!(
+        dbglex("a+=b-=c*=d/=e"),
+        "a += b -= c *= d /= e",
+    );
+    assert_eq!(
+        dbglex("+= -= *= /="),
+        "+= ws -= ws *= ws /=",
+    );
+
+    // Question-equals variants.
+    assert_eq!(
+        dbglex("a+?=b-?=c*?=d/?=e"),
+        "a +?= b -?= c *?= d /?= e",
+    );
+    assert_eq!(
+        dbglex("+?= -?= *?= /?="),
+        "+?= ws -?= ws *?= ws /?=",
+    );
+
+    // Bar-equals variants.
+    assert_eq!(
+        dbglex("a+|=b-|=c*|=d/|=e"),
+        "a +|= b -|= c *|= d /|= e",
+    );
+    assert_eq!(
+        dbglex("+|= -|= *|= /|="),
+        "+|= ws -|= ws *|= ws /|=",
+    );
+
+    // Comparison operators.
+    assert_eq!(
+        dbglex("a.<b.>c<=d>=e==f!=g"),
+        "a .< b .> c <= d >= e == f != g",
+    );
+    assert_eq!(
+        dbglex(".< .> <= >= == !="),
+        ".< ws .> ws <= ws >= ws == ws !=",
+    );
+
+    // Mixed complex expressions.
+    assert_eq!(
+        dbglex("x+=1+?y"),
+        "x += 1 +? y",
+    );
+    assert_eq!(
+        dbglex("a+b+?c+|d+=e+?=f+|=g"),
+        "a + b +? c +| d += e +?= f +|= g",
     );
 }
 
