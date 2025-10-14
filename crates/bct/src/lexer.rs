@@ -61,6 +61,10 @@ pub enum Sigil {
     MinusBar,
     StarBar,
     SlashBar,
+    PlusExclamation,
+    MinusExclamation,
+    StarExclamation,
+    SlashExclamation,
     PlusEquals,
     MinusEquals,
     StarEquals,
@@ -374,6 +378,10 @@ impl Sigil {
             Sigil::MinusBar => "-|",
             Sigil::StarBar => "*|",
             Sigil::SlashBar => "/|",
+            Sigil::PlusExclamation => "+!",
+            Sigil::MinusExclamation => "-!",
+            Sigil::StarExclamation => "*!",
+            Sigil::SlashExclamation => "/!",
             Sigil::PlusEquals => "+=",
             Sigil::MinusEquals => "-=",
             Sigil::StarEquals => "*=",
@@ -531,6 +539,16 @@ fn test_lex_chunk() {
         "+| ws -| ws *| ws /|",
     );
 
+    // Exclamation variants.
+    assert_eq!(
+        dbglex("a+!b-!c*!d/!e"),
+        "a +! b -! c *! d /! e",
+    );
+    assert_eq!(
+        dbglex("+! -! *! /!"),
+        "+! ws -! ws *! ws /!",
+    );
+
     // Assignment operators.
     assert_eq!(
         dbglex("a+=b-=c*=d/=e"),
@@ -579,6 +597,10 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("a+b+?c+|d+=e+?=f+|=g"),
         "a + b +? c +| d += e +?= f +|= g",
+    );
+    assert_eq!(
+        dbglex("a+b+?c+|d+!e"),
+        "a + b +? c +| d +! e",
     );
 }
 
