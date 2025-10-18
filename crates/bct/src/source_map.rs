@@ -186,7 +186,7 @@ impl<'db> State<'db> {
 fn basic_parse_comment(text: &str) -> Option<Result<usize, usize>> {
     let bytes = text.as_bytes();
     match *bytes {
-        [b'%', ..] => {
+        [b'/', b'/', ..] => {
             let newline = memchr::memchr(b'\n', bytes);
             match newline {
                 Some(newline) => {
@@ -361,21 +361,21 @@ fn test_source_map() {
     run(&[
         F::T("ab"),
         F::T("bdd"),
-        F::C("%"),
+        F::C("//"),
     ]);
     run(&[
         F::T("ab"),
         F::T("bdd"),
-        F::C("%"),
+        F::C("//"),
         F::T("\n"),
     ]);
     run(&[
         F::T("ab"),
-        F::C("%a"),
+        F::C("//a"),
         F::T("\nbdd"),
-        F::C("%b"),
+        F::C("//b"),
         F::T("\n"),
-        F::C("%b"),
+        F::C("//b"),
     ]);
     run(&[
         F::T("ab"),
@@ -403,14 +403,14 @@ fn test_source_map() {
         F::E("\"x"),
     ]);
     run(&[
-        F::E("\"x . %"),
+        F::E("\"x . //"),
     ]);
     run(&[
-        F::C("% \" . \""),
+        F::C("// \" . \""),
         F::T("\n"),
     ]);
     run(&[
-        F::S("\"% . \""),
+        F::S("\"// . \""),
     ]);
     run(&[
         F::T("/ a"),

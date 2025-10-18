@@ -469,15 +469,15 @@ fn test_lex_chunk() {
         "a ws :- ws b ws c",
     );
     assert_eq!(
-        dbglex("a%"),
+        dbglex("a//"),
         "a cmt",
     );
     assert_eq!(
-        dbglex("a%\n"),
+        dbglex("a//\n"),
         "a cmt ws",
     );
     assert_eq!(
-        dbglex("a%\nd"),
+        dbglex("a//\nd"),
         "a cmt ws d",
     );
     assert_eq!(
