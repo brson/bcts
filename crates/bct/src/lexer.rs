@@ -65,6 +65,10 @@ pub enum Sigil {
     MinusExclamation,
     StarExclamation,
     SlashExclamation,
+    PlusPercent,
+    MinusPercent,
+    StarPercent,
+    SlashPercent,
     PlusEquals,
     MinusEquals,
     StarEquals,
@@ -382,6 +386,10 @@ impl Sigil {
             Sigil::MinusExclamation => "-!",
             Sigil::StarExclamation => "*!",
             Sigil::SlashExclamation => "/!",
+            Sigil::PlusPercent => "+%",
+            Sigil::MinusPercent => "-%",
+            Sigil::StarPercent => "*%",
+            Sigil::SlashPercent => "/%",
             Sigil::PlusEquals => "+=",
             Sigil::MinusEquals => "-=",
             Sigil::StarEquals => "*=",
@@ -547,6 +555,16 @@ fn test_lex_chunk() {
     assert_eq!(
         dbglex("+! -! *! /!"),
         "+! ws -! ws *! ws /!",
+    );
+
+    // Percent variants.
+    assert_eq!(
+        dbglex("a+%b-%c*%d/%e"),
+        "a +% b -% c *% d /% e",
+    );
+    assert_eq!(
+        dbglex("+% -% *% /%"),
+        "+% ws -% ws *% ws /%",
     );
 
     // Assignment operators.

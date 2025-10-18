@@ -59,7 +59,7 @@ pub fn basic_config<'db>(
 ) -> Config<'db> {
     Config::new(
         db,
-        vec!['%', '/'],
+        vec!['/'],
         vec!['"'],
         //basic_parse_comment,
         //basic_parse_string,
