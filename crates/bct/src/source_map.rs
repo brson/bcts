@@ -208,15 +208,29 @@ fn basic_parse_comment(text: &str) -> Option<Result<usize, usize>> {
 fn basic_parse_string(text: &str) -> Option<Result<usize, usize>> {
     match text.as_bytes()[0] {
         b'"' => {
-            let newline = memchr::memchr(b'"', text[1..].as_bytes());
-            match newline {
-                Some(newline) => {
-                    Some(Ok(newline.checked_add(2).X()))
-                }
-                None => {
-                    Some(Err(text.len()))
+            let bytes = text.as_bytes();
+            let mut i = 1;
+
+            while i < bytes.len() {
+                match bytes[i] {
+                    b'"' => {
+                        return Some(Ok(i + 1));
+                    }
+                    b'\\' => {
+                        // Skip backslash and next character (if exists).
+                        i += 1;
+                        if i < bytes.len() {
+                            i += 1;
+                        }
+                    }
+                    _ => {
+                        i += 1;
+                    }
                 }
             }
+
+            // No closing quote found.
+            Some(Err(text.len()))
         },
         _ => unreachable!(),
     }
@@ -426,5 +440,30 @@ fn test_source_map() {
     ]);
     run(&[
         F::E("/*/**/ab"),
+    ]);
+
+    // Escape sequence tests.
+    run(&[
+        F::S("\"foo\\\"bar\""),
+    ]);
+    run(&[
+        F::S("\"foo\\\\\""),
+    ]);
+    run(&[
+        F::S("\"foo\\\\\\\"bar\""),
+    ]);
+    run(&[
+        F::S("\"\\\\\\\\\""),
+    ]);
+    run(&[
+        F::E("\"foo\\\"bar"),
+    ]);
+    run(&[
+        F::E("\"foo\\\\"),
+    ]);
+    run(&[
+        F::T("x"),
+        F::S("\"a\\\"b\""),
+        F::T("y"),
     ]);
 }

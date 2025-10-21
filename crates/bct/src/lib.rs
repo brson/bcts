@@ -5,6 +5,7 @@ use rmx::prelude::*;
 
 pub mod input;
 pub mod text;
+pub mod escapes;
 pub mod chunk;
 pub mod source_map;
 pub mod chunks;
