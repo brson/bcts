@@ -187,6 +187,19 @@ impl<'db> BracerIter<'db> {
                             self.next_removed_close_index = self.next_removed_close_index
                                 .checked_add(next_branch.removed_closes).X();
 
+                            // Skip any removed_closes that are now behind our position.
+                            // This handles cases where removed_closes exist at positions
+                            // we've jumped past after exiting the branch.
+                            let removed_closes = &self.tree.removed_closes(self.db)
+                                [0..self.removed_closes.C().end];
+                            while let Some(rc) = removed_closes.get(self.next_removed_close_index) {
+                                if rc.0 < self.next_token_index {
+                                    self.next_removed_close_index = self.next_removed_close_index.checked_add(1).X();
+                                } else {
+                                    break;
+                                }
+                            }
+
                             Some(branch)
                         },
                         Ordering::Greater => bug!(),
