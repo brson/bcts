@@ -22,6 +22,8 @@ pub mod package_resolve;
 pub mod package2;
 pub mod package_resolve2;
 
+pub mod module_graph;
+
 use salsa::Database as Db;
 
 #[salsa::db]
