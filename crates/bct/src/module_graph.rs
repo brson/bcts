@@ -1,8 +1,7 @@
 //! Module graph abstraction.
 //!
 //! Provides a package-agnostic view of modules for compilation.
-//! `ModuleGraph` represents a dependency-ordered collection of modules
-//! with resolved imports.
+//! `ModuleGraph` represents a dependency-ordered collection of modules.
 
 use rmx::prelude::*;
 use rmx::std::collections::{BTreeMap, BTreeSet};
@@ -28,32 +27,10 @@ pub struct Module {
     pub source: Source,
 }
 
-/// Resolved import: local alias maps to source module and export name.
-#[derive(Clone, Hash, PartialEq, Eq)]
-#[derive(salsa::Update)]
-pub struct ResolvedImport {
-    /// Local name used in this module.
-    pub local_name: String,
-    /// Source module ID.
-    pub source_module: ModuleId,
-    /// Name of the export in the source module.
-    pub export_name: String,
-}
-
-impl std::fmt::Debug for ResolvedImport {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("ResolvedImport")
-            .field("local_name", &self.local_name)
-            .field("source_module", &"<ModuleId>")
-            .field("export_name", &self.export_name)
-            .finish()
-    }
-}
-
 /// The module graph: a dependency-ordered collection of modules.
 ///
-/// Contains all modules in topological order (dependencies before dependents)
-/// and resolved imports for each module.
+/// Contains all modules in topological order (dependencies before dependents).
+/// Function-level imports are resolved by the typechecker, not stored here.
 #[salsa::input]
 pub struct ModuleGraph {
     /// Modules in dependency order (dependencies come first).
@@ -64,10 +41,6 @@ pub struct ModuleGraph {
     #[returns(ref)]
     pub module_by_id: BTreeMap<ModuleId, Module>,
 
-    /// Resolved imports per module.
-    #[returns(ref)]
-    pub imports: BTreeMap<ModuleId, Vec<ResolvedImport>>,
-
     /// Direct dependencies per module (for ordering verification).
     #[returns(ref)]
     pub dependencies: BTreeMap<ModuleId, BTreeSet<ModuleId>>,
@@ -77,11 +50,6 @@ impl ModuleGraph {
     /// Get a module by its ID.
     pub fn get_module(&self, db: &dyn salsa::Database, id: ModuleId) -> Option<Module> {
         self.module_by_id(db).get(&id).copied()
-    }
-
-    /// Get imports for a module.
-    pub fn get_imports<'db>(&self, db: &'db dyn salsa::Database, id: ModuleId) -> &'db [ResolvedImport] {
-        self.imports(db).get(&id).map(|v| v.as_slice()).unwrap_or(&[])
     }
 
     /// Iterate modules in dependency order.
@@ -95,7 +63,6 @@ pub struct ModuleGraphBuilder<'db> {
     db: &'db dyn salsa::Database,
     modules: Vec<Module>,
     module_by_id: BTreeMap<ModuleId, Module>,
-    imports: BTreeMap<ModuleId, Vec<ResolvedImport>>,
     dependencies: BTreeMap<ModuleId, BTreeSet<ModuleId>>,
 }
 
@@ -106,7 +73,6 @@ impl<'db> ModuleGraphBuilder<'db> {
             db,
             modules: Vec::new(),
             module_by_id: BTreeMap::new(),
-            imports: BTreeMap::new(),
             dependencies: BTreeMap::new(),
         }
     }
@@ -123,29 +89,14 @@ impl<'db> ModuleGraphBuilder<'db> {
         let module = Module::new(self.db, id, source);
         self.modules.push(module);
         self.module_by_id.insert(id, module);
-        self.imports.insert(id, Vec::new());
         self.dependencies.insert(id, BTreeSet::new());
         id
     }
 
-    /// Add an import to a module.
-    pub fn add_import(
-        &mut self,
-        module_id: ModuleId,
-        local_name: impl Into<String>,
-        source_module: ModuleId,
-        export_name: impl Into<String>,
-    ) {
-        let import = ResolvedImport {
-            local_name: local_name.into(),
-            source_module,
-            export_name: export_name.into(),
-        };
-        if let Some(imports) = self.imports.get_mut(&module_id) {
-            imports.push(import);
-        }
+    /// Add a dependency between modules.
+    pub fn add_dependency(&mut self, module_id: ModuleId, depends_on: ModuleId) {
         if let Some(deps) = self.dependencies.get_mut(&module_id) {
-            deps.insert(source_module);
+            deps.insert(depends_on);
         }
     }
 
@@ -155,7 +106,6 @@ impl<'db> ModuleGraphBuilder<'db> {
             self.db,
             self.modules,
             self.module_by_id,
-            self.imports,
             self.dependencies,
         )
     }
@@ -174,8 +124,8 @@ mod tests {
         let base = builder.add_module("sys/std/base", Source::new(&db, S("// base")));
         let math = builder.add_module("sys/std/math", Source::new(&db, S("// math")));
 
-        // math imports from base.
-        builder.add_import(math, "base_fn", base, "base_fn");
+        // math depends on base.
+        builder.add_dependency(math, base);
 
         let graph = builder.build();
 
@@ -184,8 +134,8 @@ mod tests {
         assert!(graph.get_module(&db, base).is_some());
         assert!(graph.get_module(&db, math).is_some());
 
-        let math_imports = graph.get_imports(&db, math);
-        assert_eq!(math_imports.len(), 1);
-        assert_eq!(math_imports[0].local_name, "base_fn");
+        // Verify dependencies.
+        let math_deps = graph.dependencies(&db).get(&math).unwrap();
+        assert!(math_deps.contains(&base));
     }
 }
