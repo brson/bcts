@@ -1,4 +1,4 @@
-//! Test cases for bct bracer handling of unmatched brackets.
+//! Test cases for bcts bracer handling of unmatched brackets.
 //!
 //! These inputs previously triggered bug!() panics at:
 //! - bracer.rs:147 when next_token_index > next_removed_close.0
@@ -13,11 +13,11 @@ use std::panic::{catch_unwind, AssertUnwindSafe};
 /// Returns Ok(token_count) on success, Err(panic_message) on panic.
 fn dbglex(s: &str) -> Result<usize, String> {
     let result = catch_unwind(AssertUnwindSafe(|| {
-        let db = bct::Database::default();
-        let source = bct::input::Source::new(&db, s.to_string());
-        let chunk = bct::source_map::basic_source_map(&db, source);
-        let chunk_lex = bct::lexer::lex_chunk(&db, chunk);
-        let bracer = bct::bracer::bracer(&db, chunk_lex);
+        let db = bcts::Database::default();
+        let source = bcts::input::Source::new(&db, s.to_string());
+        let chunk = bcts::source_map::basic_source_map(&db, source);
+        let chunk_lex = bcts::lexer::lex_chunk(&db, chunk);
+        let bracer = bcts::bracer::bracer(&db, chunk_lex);
         // Consume the iterator to trigger any panics.
         let tokens: Vec<_> = bracer.iter(&db).collect();
         tokens.len()

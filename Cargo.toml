@@ -14,7 +14,7 @@ members = [
 ]
 
 default-members = [
-  "crates/bct",
+  "crates/bcts",
 ]
 
 [workspace.dependencies]

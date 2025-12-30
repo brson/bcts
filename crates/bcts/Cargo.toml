@@ -1,5 +1,5 @@
 [package]
-name = "bct"
+name = "bcts"
 version.workspace = true
 license.workspace = true
 authors.workspace = true

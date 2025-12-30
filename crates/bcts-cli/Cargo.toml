@@ -1,5 +1,5 @@
 [package]
-name = "bct-cli"
+name = "bcts-cli"
 version.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -7,8 +7,8 @@ edition.workspace = true
 
 [dependencies]
 rmx.workspace = true
-bct.path = "../bct"
+bcts.path = "../bcts"
 
 [[bin]]
-name = "bct"
+name = "bcts"
 path = "src/main.rs"
