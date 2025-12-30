@@ -2361,7 +2361,9 @@ dependencies = [
 
 [[package]]
 name = "rustmax"
-version = "0.0.5"
+version = "0.0.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0fb6aa1a85ff993efc3c4a3bf648b433c274d75068845ce12494ea40904e9798"
 dependencies = [
  "ahash",
  "anyhow",

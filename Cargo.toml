@@ -18,9 +18,8 @@ default-members = [
 ]
 
 [workspace.dependencies]
-rmx.path = "../rustmax/crates/rustmax"
 rmx.package = "rustmax"
-rmx.version = "0.0.5"
+rmx.version = "0.0.6"
 rmx.features = [
   "rmx-profile-wasm",
 ]
