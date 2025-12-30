@@ -24,7 +24,7 @@ rmx.version = "0.0.5"
 rmx.features = [
   "rmx-profile-wasm",
 ]
-salsa.path = "../salsa/"
+salsa = "0.25.2"
 serde = "1"
 memchr.version = "2.7.4"
 enum-iterator = "2.1.0"
