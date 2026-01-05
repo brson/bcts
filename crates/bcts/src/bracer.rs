@@ -83,7 +83,7 @@ impl<'db> BracerIter<'db> {
     /// Get source Text and byte span for this branch, including delimiters.
     ///
     /// Returns None for top-level iterators (which have no enclosing braces).
-    pub fn text_span(&self) -> Option<(crate::text::Text<'db>, Range<usize>)> {
+    pub fn text_span(&self) -> Option<crate::text::TextSpan<'db>> {
         let tokens = self.tree.chunk(self.db).tokens(self.db);
         // real_token_range starts AFTER the open brace, so go back 1 for open brace.
         let open_idx = self.real_token_range.start.checked_sub(1)?;
@@ -93,7 +93,7 @@ impl<'db> BracerIter<'db> {
         let text = open_token.text(self.db).text(self.db);
         let span = open_token.text(self.db).range(self.db).start
                  ..close_token.text(self.db).range(self.db).end;
-        Some((text, span))
+        Some(crate::text::TextSpan::new(text, span))
     }
 
     fn next2(&mut self) -> Option<TreeToken<'db>> {
@@ -438,11 +438,11 @@ pub fn bracer<'db>(
 
 impl<'db> TreeToken<'db> {
     /// Get source Text and byte span for this token or branch.
-    pub fn text_span(&self, db: &'db dyn crate::Db) -> Option<(crate::text::Text<'db>, Range<usize>)> {
+    pub fn text_span(&self, db: &'db dyn crate::Db) -> Option<crate::text::TextSpan<'db>> {
         match self {
             TreeToken::Token(tok) => {
                 let subtext = tok.text(db);
-                Some((subtext.text(db), subtext.range(db)))
+                Some(crate::text::TextSpan::new(subtext.text(db), subtext.range(db)))
             }
             TreeToken::Branch(_, iter) => iter.text_span(),
         }
@@ -632,9 +632,9 @@ fn test_text_span() {
         // Find the first branch.
         for token in bracer.iter(db) {
             if let TreeToken::Branch(_, _) = &token {
-                let (text, span) = token.text_span(db)?;
-                let spanned = &text.as_str(db)[span.clone()];
-                return Some((span.start, span.end, spanned.to_string()));
+                let ts = token.text_span(db)?;
+                let spanned = &ts.text.as_str(db)[ts.span.clone()];
+                return Some((ts.start(), ts.end(), spanned.to_string()));
             }
         }
         None

@@ -3,6 +3,41 @@ use rmx::prelude::*;
 use std::ops::Range;
 use std::{iter, mem};
 
+/// Byte span type alias.
+pub type ByteSpan = Range<usize>;
+
+/// Lightweight text + span pair for passing around without salsa overhead.
+///
+/// Unlike `SubText` which is salsa-tracked, this is a simple struct
+/// for temporary use during parsing and error reporting.
+#[derive(Clone)]
+pub struct TextSpan<'db> {
+    pub text: Text<'db>,
+    pub span: ByteSpan,
+}
+
+impl<'db> TextSpan<'db> {
+    pub fn new(text: Text<'db>, span: ByteSpan) -> Self {
+        TextSpan { text, span }
+    }
+
+    pub fn start(&self) -> usize {
+        self.span.start
+    }
+
+    pub fn end(&self) -> usize {
+        self.span.end
+    }
+
+    pub fn with_end(&self, end: usize) -> Self {
+        TextSpan { text: self.text, span: self.span.start..end }
+    }
+
+    pub fn with_span(&self, span: ByteSpan) -> Self {
+        TextSpan { text: self.text, span }
+    }
+}
+
 #[salsa::tracked]
 pub struct Text<'db> {
     #[returns(ref)]
