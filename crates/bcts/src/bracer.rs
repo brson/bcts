@@ -152,7 +152,7 @@ impl<'db> BracerIter<'db> {
                             if !next_token.is_close_sigil(self.db) {
                                 Some(TreeToken::Token(*next_token))
                             } else {
-                                continue;
+                                panic!("is this possible?")
                             }
                         }
                         Ordering::Equal => {
@@ -360,7 +360,7 @@ pub fn bracer<'db>(
                         });
                         parent_brace_map.append(brace_map);
                     } else {
-                        todo!()
+                        bug!()
                     }
                 }
             } else {
@@ -617,6 +617,36 @@ fn test_bracer() {
         dbglex("([{<>}])"),
         "( [ { < > } ] )",
     );
+    // Mismatch: paren inside brace closed by brace.
+    assert_eq!(
+        dbglex("{(}"),
+        "{ ( ) }",
+    );
+    // Mismatch: bracket inside brace closed by brace.
+    assert_eq!(
+        dbglex("{[}"),
+        "{ [ ] }",
+    );
+    // Mismatch: angle inside brace closed by brace.
+    assert_eq!(
+        dbglex("{<}"),
+        "{ < > }",
+    );
+    // Mismatch: bracket inside paren closed by paren.
+    assert_eq!(
+        dbglex("([)"),
+        "( [ ] )",
+    );
+    // Mismatch: angle inside paren closed by paren.
+    assert_eq!(
+        dbglex("(<)"),
+        "( < > )",
+    );
+    // Mismatch: angle inside bracket closed by bracket.
+    assert_eq!(
+        dbglex("[<]"),
+        "[ < > ]",
+    );
 }
 
 #[test]
@@ -685,4 +715,48 @@ fn test_text_span() {
     assert_eq!(spanned, "<z>");
     assert_eq!(start, 0);
     assert_eq!(end, 3);
+}
+
+#[test]
+fn test_without_space() {
+    let ref db = crate::Database::default();
+    let source = crate::input::Source::new(db, S("a b (c)"));
+    let chunk = crate::source_map::basic_source_map(db, source);
+    let chunk_lex = crate::lexer::lex_chunk(db, chunk);
+    let bracer = bracer(db, chunk_lex);
+
+    let tokens: Vec<_> = bracer.iter(db).collect();
+    // tokens: "a", ws, "b", ws, branch(c)
+    assert_eq!(tokens.len(), 5);
+
+    // Token "a" - not whitespace, returns Some.
+    let t0 = tokens[0].clone().without_space(db);
+    assert!(t0.is_some());
+
+    // Whitespace token - returns None.
+    let t1 = tokens[1].clone().without_space(db);
+    assert!(t1.is_none());
+
+    // Branch - always returns Some.
+    let t4 = tokens[4].clone().without_space(db);
+    assert!(t4.is_some());
+}
+
+#[test]
+fn test_removed_closes() {
+    // Stray closes get removed.
+    assert_eq!(dbglex("a)b"), "a b");
+    assert_eq!(dbglex("a}b"), "a b");
+    assert_eq!(dbglex("a]b"), "a b");
+    assert_eq!(dbglex("a>b"), "a b");
+    // Multiple stray closes.
+    assert_eq!(dbglex("a)}]>b"), "a b");
+    // Stray close inside matched braces.
+    assert_eq!(dbglex("(a}b)"), "( a b )");
+    assert_eq!(dbglex("(a}b}c)"), "( a b c )");
+    // Stray closes after matched braces.
+    assert_eq!(dbglex("(a))"), "( a )");
+    assert_eq!(dbglex("(a)})"), "( a )");
+    // Complex nesting with stray closes.
+    assert_eq!(dbglex("((a)})"), "( ( a ) )");
 }
