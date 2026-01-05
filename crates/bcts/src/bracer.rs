@@ -80,6 +80,22 @@ impl<'db> Iterator for BracerIter<'db> {
 }
 
 impl<'db> BracerIter<'db> {
+    /// Get source Text and byte span for this branch, including delimiters.
+    ///
+    /// Returns None for top-level iterators (which have no enclosing braces).
+    pub fn text_span(&self) -> Option<(crate::text::Text<'db>, Range<usize>)> {
+        let tokens = self.tree.chunk(self.db).tokens(self.db);
+        // real_token_range starts AFTER the open brace, so go back 1 for open brace.
+        let open_idx = self.real_token_range.start.checked_sub(1)?;
+        let close_idx = self.real_token_range.end.checked_sub(1)?;
+        let open_token = tokens.get(open_idx)?;
+        let close_token = tokens.get(close_idx)?;
+        let text = open_token.text(self.db).text(self.db);
+        let span = open_token.text(self.db).range(self.db).start
+                 ..close_token.text(self.db).range(self.db).end;
+        Some((text, span))
+    }
+
     fn next2(&mut self) -> Option<TreeToken<'db>> {
         loop {
             debug!("--");
@@ -421,6 +437,17 @@ pub fn bracer<'db>(
 }
 
 impl<'db> TreeToken<'db> {
+    /// Get source Text and byte span for this token or branch.
+    pub fn text_span(&self, db: &'db dyn crate::Db) -> Option<(crate::text::Text<'db>, Range<usize>)> {
+        match self {
+            TreeToken::Token(tok) => {
+                let subtext = tok.text(db);
+                Some((subtext.text(db), subtext.range(db)))
+            }
+            TreeToken::Branch(_, iter) => iter.text_span(),
+        }
+    }
+
     pub fn without_space(self, db: &'db dyn crate::Db) -> Option<Self> {
         match self {
             TreeToken::Token(token) => {
@@ -590,4 +617,72 @@ fn test_bracer() {
         dbglex("([{<>}])"),
         "( [ { < > } ] )",
     );
+}
+
+#[test]
+fn test_text_span() {
+    let ref db = crate::Database::default();
+
+    // Helper to get the span string from input.
+    let get_span = |s: &str| -> Option<(usize, usize, String)> {
+        let source = crate::input::Source::new(db, S(s));
+        let chunk = crate::source_map::basic_source_map(db, source);
+        let chunk_lex = crate::lexer::lex_chunk(db, chunk);
+        let bracer = bracer(db, chunk_lex);
+        // Find the first branch.
+        for token in bracer.iter(db) {
+            if let TreeToken::Branch(_, _) = &token {
+                let (text, span) = token.text_span(db)?;
+                let spanned = &text.as_str(db)[span.clone()];
+                return Some((span.start, span.end, spanned.to_string()));
+            }
+        }
+        None
+    };
+
+    // Simple branch - span covers entire (a).
+    let (start, end, spanned) = get_span("(a)").X();
+    assert_eq!(spanned, "(a)");
+    assert_eq!(start, 0);
+    assert_eq!(end, 3);
+
+    // Empty branch - span covers ().
+    let (start, end, spanned) = get_span("()").X();
+    assert_eq!(spanned, "()");
+    assert_eq!(start, 0);
+    assert_eq!(end, 2);
+
+    // Branch with leading content.
+    let (start, end, spanned) = get_span("x(a)").X();
+    assert_eq!(spanned, "(a)");
+    assert_eq!(start, 1);
+    assert_eq!(end, 4);
+
+    // Unclosed branch.
+    let (start, end, spanned) = get_span("(a").X();
+    assert_eq!(spanned, "(a");
+    assert_eq!(start, 0);
+    assert_eq!(end, 2);
+
+    // Nested branches - outer.
+    let (start, end, spanned) = get_span("((a))").X();
+    assert_eq!(spanned, "((a))");
+    assert_eq!(start, 0);
+    assert_eq!(end, 5);
+
+    // Different bracket types.
+    let (start, end, spanned) = get_span("[x]").X();
+    assert_eq!(spanned, "[x]");
+    assert_eq!(start, 0);
+    assert_eq!(end, 3);
+
+    let (start, end, spanned) = get_span("{y}").X();
+    assert_eq!(spanned, "{y}");
+    assert_eq!(start, 0);
+    assert_eq!(end, 3);
+
+    let (start, end, spanned) = get_span("<z>").X();
+    assert_eq!(spanned, "<z>");
+    assert_eq!(start, 0);
+    assert_eq!(end, 3);
 }
