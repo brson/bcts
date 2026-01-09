@@ -14,7 +14,7 @@ use crate::source_map::{
 
 #[salsa::tracked]
 pub struct ChunkLex<'db> {
-    pub chunk: Chunk<'db>,
+    chunk: Chunk<'db>,
     #[returns(ref)]
     pub tokens: Vec<Token<'db>>,
 }
