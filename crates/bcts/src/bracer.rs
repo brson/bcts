@@ -91,9 +91,10 @@ impl<'db> BracerIter<'db> {
         let open_token = tokens.get(open_idx)?;
         let close_token = tokens.get(close_idx)?;
         let text = open_token.text(self.db).text(self.db);
+        let interned_text = crate::text::InternedText::new(self.db, text.text(self.db).clone());
         let span = open_token.text(self.db).range(self.db).start
                  ..close_token.text(self.db).range(self.db).end;
-        Some(crate::text::TextSpan::new(text, span))
+        Some(crate::text::TextSpan::new(interned_text, span))
     }
 
     fn next2(&mut self) -> Option<TreeToken<'db>> {
@@ -442,7 +443,9 @@ impl<'db> TreeToken<'db> {
         match self {
             TreeToken::Token(tok) => {
                 let subtext = tok.text(db);
-                Some(crate::text::TextSpan::new(subtext.text(db), subtext.range(db)))
+                let text = subtext.text(db);
+                let interned_text = crate::text::InternedText::new(db, text.text(db).clone());
+                Some(crate::text::TextSpan::new(interned_text, subtext.range(db)))
             }
             TreeToken::Branch(_, iter) => iter.text_span(),
         }

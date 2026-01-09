@@ -12,12 +12,12 @@ pub type ByteSpan = Range<usize>;
 /// for temporary use during parsing and error reporting.
 #[derive(Clone)]
 pub struct TextSpan<'db> {
-    pub text: Text<'db>,
+    pub text: InternedText<'db>,
     pub span: ByteSpan,
 }
 
 impl<'db> TextSpan<'db> {
-    pub fn new(text: Text<'db>, span: ByteSpan) -> Self {
+    pub fn new(text: InternedText<'db>, span: ByteSpan) -> Self {
         TextSpan { text, span }
     }
 
