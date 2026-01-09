@@ -10,7 +10,7 @@ pub type ByteSpan = Range<usize>;
 ///
 /// Unlike `SubText` which is salsa-tracked, this is a simple struct
 /// for temporary use during parsing and error reporting.
-#[derive(Clone)]
+#[derive(Clone, Debug, Hash, salsa::Update)]
 pub struct TextSpan<'db> {
     pub text: InternedText<'db>,
     pub span: ByteSpan,
@@ -35,6 +35,14 @@ impl<'db> TextSpan<'db> {
 
     pub fn with_span(&self, span: ByteSpan) -> Self {
         TextSpan { text: self.text, span }
+    }
+
+    pub fn as_str(&self, db: &'db dyn crate::Db) -> &'db str {
+        &self.text.text(db)[self.span.clone()]
+    }
+
+    pub fn range(&self) -> ByteSpan {
+        self.span.clone()
     }
 }
 

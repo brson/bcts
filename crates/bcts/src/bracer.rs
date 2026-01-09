@@ -90,11 +90,10 @@ impl<'db> BracerIter<'db> {
         let close_idx = self.real_token_range.end.checked_sub(1)?;
         let open_token = tokens.get(open_idx)?;
         let close_token = tokens.get(close_idx)?;
-        let text = open_token.text(self.db).text(self.db);
-        let interned_text = crate::text::InternedText::new(self.db, text.text(self.db).clone());
-        let span = open_token.text(self.db).range(self.db).start
-                 ..close_token.text(self.db).range(self.db).end;
-        Some(crate::text::TextSpan::new(interned_text, span))
+        let open_text_span = open_token.text(self.db);
+        let close_text_span = close_token.text(self.db);
+        let span = open_text_span.start()..close_text_span.end();
+        Some(open_text_span.with_span(span))
     }
 
     fn next2(&mut self) -> Option<TreeToken<'db>> {
@@ -441,12 +440,7 @@ impl<'db> TreeToken<'db> {
     /// Get source Text and byte span for this token or branch.
     pub fn text_span(&self, db: &'db dyn crate::Db) -> Option<crate::text::TextSpan<'db>> {
         match self {
-            TreeToken::Token(tok) => {
-                let subtext = tok.text(db);
-                let text = subtext.text(db);
-                let interned_text = crate::text::InternedText::new(db, text.text(db).clone());
-                Some(crate::text::TextSpan::new(interned_text, subtext.range(db)))
-            }
+            TreeToken::Token(tok) => Some(tok.text(db)),
             TreeToken::Branch(_, iter) => iter.text_span(),
         }
     }

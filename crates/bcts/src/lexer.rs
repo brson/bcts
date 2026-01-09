@@ -6,7 +6,7 @@ use rmx::std::{iter, mem};
 use rmx::std::collections::BTreeMap;
 
 use crate::input::Source;
-use crate::text::{Text, SubText};
+use crate::text::{Text, InternedText, TextSpan};
 use crate::chunk::{Chunk, RangeKind};
 use crate::source_map::{
     basic_source_map,
@@ -22,7 +22,7 @@ pub struct ChunkLex<'db> {
 #[salsa::tracked]
 #[derive(Debug)]
 pub struct Token<'db> {
-    pub text: SubText<'db>,
+    pub text: TextSpan<'db>,
     pub kind: TokenKind,
 }
 
@@ -112,27 +112,28 @@ pub fn lex_chunk<'db>(
 ) -> ChunkLex<'db> {
     let mut tokens = Vec::new();
     let chunk_text = chunk.text(db);
+    let interned_text = InternedText::new(db, chunk_text.text(db).clone());
 
     for range in chunk.ranges(db) {
         match range {
             (range, RangeKind::Comment) => {
                 tokens.push(Token::new(
                     db,
-                    chunk_text.sub(db, range),
+                    TextSpan::new(interned_text, range),
                     TokenKind::Comment,
                 ));
             }
             (range, RangeKind::String) => {
                 tokens.push(Token::new(
                     db,
-                    chunk_text.sub(db, range),
+                    TextSpan::new(interned_text, range),
                     TokenKind::String,
                 ));
             }
             (range, RangeKind::Error) => {
                 tokens.push(Token::new(
                     db,
-                    chunk_text.sub(db, range),
+                    TextSpan::new(interned_text, range),
                     TokenKind::Error,
                 ));
             }
@@ -142,6 +143,7 @@ pub fn lex_chunk<'db>(
                     chunk,
                     range,
                     chunk_text: chunk_text.C(),
+                    interned_text,
                 };
 
                 tokens.extend(
@@ -157,6 +159,7 @@ pub fn lex_chunk<'db>(
         db: &'db dyn crate::Db,
         chunk: Chunk<'db>,
         chunk_text: Text<'db>,
+        interned_text: InternedText<'db>,
         range: Range<usize>,
     }
 
@@ -169,6 +172,10 @@ pub fn lex_chunk<'db>(
     }
 
     impl<'db> Tokenizer<'db> {
+        fn text_span(&self, range: Range<usize>) -> TextSpan<'db> {
+            TextSpan::new(self.interned_text, range)
+        }
+
         fn next(&mut self) -> Option<Token<'db>> {
             match self.peek_token() {
                 None => None,
@@ -212,7 +219,7 @@ pub fn lex_chunk<'db>(
             assert!(start < self.range.start);
             Token::new(
                 self.db,
-                self.chunk_text.sub(self.db, start .. self.range.start),
+                self.text_span(start .. self.range.start),
                 TokenKind::Word,
             )
         }
@@ -234,7 +241,7 @@ pub fn lex_chunk<'db>(
                     self.range.start = range_start.checked_add(sigil_str.len()).X();
                     return Token::new(
                         self.db,
-                        self.chunk_text.sub(self.db, range_start .. self.range.start),
+                        self.text_span(range_start .. self.range.start),
                         TokenKind::Sigil(sigil),
                     )
                     
@@ -276,7 +283,7 @@ pub fn lex_chunk<'db>(
             assert!(start < self.range.start);
             Token::new(
                 self.db,
-                self.chunk_text.sub(self.db, start .. self.range.start),
+                self.text_span(start .. self.range.start),
                 TokenKind::Error,
             )
         }
@@ -295,7 +302,7 @@ pub fn lex_chunk<'db>(
             assert!(start < self.range.start);
             Token::new(
                 self.db,
-                self.chunk_text.sub(self.db, start .. self.range.start),
+                self.text_span(start .. self.range.start),
                 TokenKind::Whitespace,
             )
         }
